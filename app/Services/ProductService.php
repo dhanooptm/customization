@@ -419,6 +419,8 @@ class ProductService
             'meta_title' => $request['meta_title'],
             'meta_description' => $request['meta_description'],
             'meta_image' => $request->has('meta_image') ? $this->upload(dir: 'product/meta/', format: 'webp', image: $request['meta_image']) : $request->existing_meta_image,
+            'price_type' => $request['price_type'],
+            'product_multi_price' =>  $request['price_type']=="multiple_price" ? $request['product_multi_price'] : '',
         ];
     }
 
@@ -450,6 +452,7 @@ class ProductService
         $digitalFileOptions = $this->getDigitalVariationOptions(request: $request);
         $digitalFileCombinations = $this->getDigitalVariationCombinations(arrays: $digitalFileOptions);
 
+        if($request['price_type'] == "multiple_price" && $request['product_multi_price'] ){
         $dataArray = [
             'name' => $request['name'][array_search('en', $request['lang'])],
             'code' => $request['code'],
@@ -487,7 +490,53 @@ class ProductService
             'meta_title' => $request['meta_title'],
             'meta_description' => $request['meta_description'],
             'meta_image' => $request->file('meta_image') ? $this->update(dir: 'product/meta/', oldImage: $product['meta_image'], format: 'png', image: $request['meta_image']) : $product['meta_image'],
+            'price_type' => $request['price_type'],
+            'product_multi_price' => $request['product_multi_price'],
+            ''
         ];
+        }
+        else{
+            $dataArray = [
+                'name' => $request['name'][array_search('en', $request['lang'])],
+                'code' => $request['code'],
+                'product_type' => $request['product_type'],
+                'category_ids' => json_encode($this->getCategoriesArray(request: $request)),
+                'category_id' => $request['category_id'],
+                'sub_category_id' => $request['sub_category_id'],
+                'sub_sub_category_id' => $request['sub_sub_category_id'],
+                'brand_id' => $request['brand_id'],
+                'unit' => $request['product_type'] == 'physical' ? $request['unit'] : null,
+                'digital_product_type' => $request['product_type'] == 'digital' ? $request['digital_product_type'] : null,
+                'details' => $request['description'][array_search('en', $request['lang'])],
+                'colors' => $this->getColorsObject(request: $request),
+                'choice_options' => $request['product_type'] == 'physical' ? json_encode($this->getChoiceOptions(request: $request)) : json_encode([]),
+                'variation' => $request['product_type'] == 'physical' ? json_encode($variations) : json_encode([]),
+                'digital_product_file_types' => $request->has('extensions_type') ? $request->get('extensions_type') : [],
+                'digital_product_extensions' => $digitalFileCombinations,
+                'unit_price' => currencyConverter(amount: $request['unit_price']),
+                'purchase_price' => 0,
+                'tax' => $request['tax_type'] == 'flat' ? currencyConverter(amount: $request['tax']) : $request['tax'],
+                'tax_type' => $request['tax_type'],
+                'tax_model' => $request['tax_model'],
+                'discount' => $request['discount_type'] == 'flat' ? currencyConverter(amount: $request['discount']) : $request['discount'],
+                'discount_type' => $request['discount_type'],
+                'attributes' => $request['product_type'] == 'physical' ? json_encode($request['choice_attributes']) : json_encode([]),
+                'current_stock' => $request['product_type'] == 'physical' ? abs($stockCount) : 999999999,
+                'minimum_order_qty' => $request['minimum_order_qty'],
+                'video_provider' => 'youtube',
+                'video_url' => $request['video_url'],
+                'multiply_qty' => ($request['product_type'] == 'physical') ? ($request['multiply_qty'] == 'on' ? 1 : 0) : 0,
+                'color_image' => json_encode($processedImages['colored_image_names']),
+                'images' => json_encode($processedImages['image_names']),
+                'digital_file_ready' => $digitalFile,
+                'digital_file_ready_storage_type' => $request->has('digital_file_ready') ? $storage : $product['digital_file_ready_storage_type'],
+                'meta_title' => $request['meta_title'],
+                'meta_description' => $request['meta_description'],
+                'meta_image' => $request->file('meta_image') ? $this->update(dir: 'product/meta/', oldImage: $product['meta_image'], format: 'png', image: $request['meta_image']) : $product['meta_image'],
+                'price_type' => $request['price_type'],
+                ''
+            ]; 
+        }
 
         if ($request->file('image')) {
             $dataArray += [

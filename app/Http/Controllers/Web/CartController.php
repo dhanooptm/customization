@@ -144,6 +144,7 @@ class CartController extends Controller
             'in_cart_quantity' => $requestQuantity,
             'in_cart_key' => $inCartExistKey,
             'variation_code' => $string,
+            'price_type' => $product->price_type,
         ];
     }
 

@@ -68,4 +68,7 @@ return [
     'digital_product_download' => 'web-views.order.digital-product-download',
     'robots_meta_content_partials' => 'web-views.partials._robotsMetaContentData',
     'product_seo_meta_content_partials' => 'web-views.partials._productSEOMetaContentData',
+    'complete_request' => 'web-views.checkout.complete-request',
+    'account_orders_requests' => 'web-views.users-profile.account-orders-requests',
+    'account_order_details_request' => 'web-views.users-profile.account-order-details-request',
 ];

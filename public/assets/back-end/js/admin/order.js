@@ -165,6 +165,53 @@ $(".payment-status").on('click', function (e) {
         }
     })
 });
+$(".read-status").on('click', function (e) {
+    e.preventDefault();
+    let id = $(this).data('id');
+    let value = $(this).val();
+    Swal.fire({
+        title: $("#read-status-message").data('title'),
+        text: $("#read-status-message").data('message'),
+        showCancelButton: true,
+        confirmButtonColor: '#377dff',
+        cancelButtonColor: 'secondary',
+        confirmButtonText: $("#message-status-confirm-text").data('text'),
+        cancelButtonText: $("#message-status-cancel-text").data('text'),
+    }).then((result) => {
+        if (value == 'read') {
+            value = 'unread'
+        } else {
+            value = 'read'
+        }
+        if (result.value) {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
+                }
+            });
+            $.ajax({
+                url: $("#read-status-url").data('url'),
+                method: 'POST',
+                data: {
+                    "id": id,
+                    "read_status": value
+                },
+                success: function (data) {
+                    if (data.customer_status == 0) {
+                        location.reload();
+                        toastr.warning($("#message-status-warning-text").data('text'));
+                    }else if(data.error){
+                        toastr.warning(data.error);
+                    }
+                    else {
+                        location.reload();
+                        toastr.success($("#message-status-success-text").data('text'));
+                    }
+                }
+            });
+        }
+    })
+});
 
 $("#order_status").on('change', function (e) {
     let value = $(this).val();

@@ -325,7 +325,69 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-sm-6 col-xl-4">
+                       @if ($product->price_type == 'multiple_price' && $product_multi_price = json_decode($product->product_multi_price,true))
+                       {{-- @dd(json_decode($product->product_multi_price,true)) --}}
+                       @php($product_multi_price = json_decode($product->product_multi_price,true))
+                       <div class="col-sm-6 col-xl-4">
+                        <h4 class="mb-3 text-capitalize">{{ translate('price_information') }}</h4>
+
+                        <div class="pair-list">
+                            @foreach ($product_multi_price as $price)
+                            <div>
+                                <span class="key text-wrap text-capitalize d-block mb-1">
+                                    Quantity {{ $price['start_point'] }} - {{ $price['end_point'] }}
+                                </span>
+                                <span>:</span>
+                                <span class="value">
+                                    {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $price['price']), currencyCode: getCurrencyCode()) }}
+                                </span>
+                                <br>
+                            </div>
+                            @endforeach
+
+{{--
+                            <div>
+                                <span class="key text-nowrap">{{ translate('tax') }}</span>
+                                <span>:</span>
+                                @if ($product->tax_type == 'percent')
+                                    <span class="value">
+                                        {{ $product->tax}}% ({{ $product->tax_model}})
+                                    </span>
+                                @else
+                                    <span class="value">
+                                        {{setCurrencySymbol(amount: usdToDefaultCurrency(amount: $product->tax)) }} ({{ $product->tax_model }})
+                                    </span>
+                                @endif
+                            </div> --}}
+                            {{-- @if($product->product_type == 'physical')
+                                <div>
+                                    <span class="key text-nowrap text-capitalize">{{ translate('shipping_cost') }}</span>
+                                    <span>:</span>
+                                    <span class="value">
+                                        {{setCurrencySymbol(amount: usdToDefaultCurrency(amount: $product->shipping_cost)) }}
+                                        @if ($product->multiply_qty == 1)
+                                            ({{ translate('multiply_with_quantity') }})
+                                        @endif
+                                    </span>
+                                </div>
+                            @endif
+                            @if($product->discount > 0)
+                                <div>
+                                    <span class="key text-nowrap">{{ translate('discount') }}</span>
+                                    <span>:</span>
+                                    @if ($product->discount_type == 'percent')
+                                        <span class="value">{{ $product->discount }}%</span>
+                                    @else
+                                        <span class="value">
+                                            {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $product->discount), currencyCode: getCurrencyCode()) }}
+                                        </span>
+                                    @endif
+                                </div>
+                            @endif --}}
+                        </div>
+                    </div>
+                           @else
+                           <div class="col-sm-6 col-xl-4">
                             <h4 class="mb-3 text-capitalize">{{ translate('price_information') }}</h4>
 
                             <div class="pair-list">
@@ -377,6 +439,7 @@
                                 @endif
                             </div>
                         </div>
+                       @endif
                         @if(count($product->tags)>0)
                             <div class="col-sm-6 col-xl-4">
                                 <h4 class="mb-3">{{ translate('tags') }}</h4>

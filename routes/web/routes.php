@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Route;
 use App\Enums\ViewPaths\Web\Pages;
 use App\Enums\ViewPaths\Web\Review;
 use App\Enums\ViewPaths\Web\UserLoyalty;
+use App\Events\OrderPlacedEvent;
+use App\Events\OrderRequestEvent;
 use App\Http\Controllers\Web\CurrencyController;
 use App\Http\Controllers\Web\PageController;
 use App\Http\Controllers\Web\ReviewController;
@@ -36,6 +38,9 @@ use App\Http\Controllers\Payment_Methods\SenangPayController;
 use App\Http\Controllers\Payment_Methods\MercadoPagoController;
 use App\Http\Controllers\Payment_Methods\BkashPaymentController;
 use App\Http\Controllers\Payment_Methods\PaystackController;
+use App\Http\Controllers\Web\ProductInquiryController;
+use App\Models\OrderRequest;
+use App\Models\Product;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,6 +83,14 @@ Route::group(['namespace' => 'Web', 'middleware' => ['maintenance_mode', 'guestC
             Route::post(Review::ADD_DELIVERYMAN_REVIEW[URI], 'addDeliveryManReview')->name('submit-deliveryman-review');
             Route::post(Review::DELETE_REVIEW_IMAGE[URI], 'deleteReviewImage')->name('delete-review-image');
         });
+        Route::controller(WebController::class)->group(function () {
+            Route::post('order-placed-request', 'order_placed_request')->name('order-placed-request');
+            Route::get('order-placed-complete', 'order_placed_complete')->name('order-placed-complete');
+        });
+        Route::controller(ProductInquiryController::class)->group(function () {
+            Route::post('product-inquiry', 'product_inquiry')->name('product-inquiry');
+            Route::post('product-price-inquiry', 'price_inquiry')->name('product-price-inquiry');
+        });
     });
 
     Route::controller(WebController::class)->group(function () {
@@ -109,8 +122,10 @@ Route::group(['namespace' => 'Web', 'middleware' => ['maintenance_mode', 'guestC
         Route::get('seller-profile/{id}', 'seller_profile')->name('seller-profile');
 
         Route::get('flash-deals/{id}', 'getFlashDealsView')->name('flash-deals');
+        //multiple price order request
+        // Route::post('order-placed-request', 'order_placed_request')->name('order-placed-request');
+        // Route::get('order-placed-complete', 'order_placed_complete')->name('order-placed-complete');
     });
-
     Route::controller(PageController::class)->group(function () {
         Route::get(Pages::ABOUT_US[URI], 'getAboutUsView')->name('about-us');
         Route::get(Pages::CONTACTS[URI], 'getContactView')->name('contacts');
@@ -124,6 +139,8 @@ Route::group(['namespace' => 'Web', 'middleware' => ['maintenance_mode', 'guestC
 
     Route::controller(ProductDetailsController::class)->group(function () {
         Route::get('/product/{slug}', 'index')->name('product');
+        Route::get('multiple-price', 'multiple_price_product')->name('multiple-price');
+        Route::post('multi-price-update', 'multi_price_update')->name('multi-price-update');
     });
 
     Route::controller(ProductListController::class)->group(function () {
@@ -189,7 +206,9 @@ Route::group(['namespace' => 'Web', 'middleware' => ['maintenance_mode', 'guestC
         Route::post('account-address-update', 'address_update')->name('address-update');
         Route::get('account-payment', 'account_payment')->name('account-payment');
         Route::get('account-oder', 'account_order')->name('account-oder')->middleware('customer');
+        Route::get('account-request-order', 'account_order_request')->name('account-request-order')->middleware('customer');
         Route::get('account-order-details', 'account_order_details')->name('account-order-details')->middleware('customer');
+        Route::get('account-request-order-details', 'account_order_details_request')->name('account-request-order-details')->middleware('customer');
         Route::get('account-order-details-vendor-info', 'account_order_details_seller_info')->name('account-order-details-vendor-info')->middleware('customer');
         Route::get('account-order-details-delivery-man-info', 'account_order_details_delivery_man_info')->name('account-order-details-delivery-man-info')->middleware('customer');
         Route::get('account-order-details-reviews', 'getAccountOrderDetailsReviewsView')->name('account-order-details-reviews')->middleware('customer');
@@ -453,5 +472,27 @@ Route::get('payment-success', 'Customer\PaymentController@success')->name('payme
 Route::get('payment-fail', 'Customer\PaymentController@fail')->name('payment-fail');
 
 Route::get('/test', function () {
+    $order = OrderRequest::where('id','100058')->first();
+        // $data['order'] = $order;
+        // $data['send-mail'] = true;
+    $data = [
+        'subject' => translate('order_placed'),
+        'title' => translate('order_placed'),
+        'userName' => "Rashed",
+        'userType' => 'customer',
+        'templateName' => 'order-request',
+        'order' => $order,
+        'orderId' => $order->id,
+        'shopName' => $order?->seller?->shop?->name ?? getWebConfig('company_name'),
+        'shopId' => $order?->seller?->shop?->id ?? 0,
+        // 'attachmentPath' =>self::storeInvoice($order->id),
+    ];
+    event(new OrderRequestEvent(email: "rashed.6amtech@gmail.com", data: $data));
+    dd('jj');
+    return view('admin-views.business-settings.email-template.customer-mail-template.order-request',compact('data','title','body'));
+    dd('ll');
+    OrderRequest::where('order_status','pending')->update([
+        'order_status' => 'unread'
+    ]);
     return view('welcome');
 });

@@ -126,6 +126,7 @@
                 <a href="{{route('product',$product->slug)}}" class="h3 mb-2 product-title">{{$product->name}}</a>
 
                 <div class="d-flex flex-wrap align-items-center mb-2 pro">
+                    @if ($product->price_type == "single_price")
                     <div class="star-rating me-2">
                         @for($inc=0;$inc<5;$inc++)
                             @if($inc<$overallRating[0])
@@ -143,18 +144,23 @@
                         <span class="web-text-primary">
                             {{$countOrder}}
                         </span> {{translate('orders')}}   </span>
+
                     <span class="__inline-25">    </span>
+                    @endif
                     <span class="font-regular font-for-tab d-inline-block font-size-sm text-body align-middle mt-1 {{Session::get('direction') === "rtl" ? 'mr-1 ml-md-2 ml-0 pr-md-2 pr-sm-1 pl-md-2 pl-sm-1' : 'ml-1 mr-md-2 mr-0 pl-md-2 pl-sm-1 pr-md-2 pr-sm-1'}} text-capitalize">
                         <span class="web-text-primary countWishlist-{{ $product->id }}"> {{$countWishlist}}</span> {{translate('wish_listed')}}
                     </span>
 
                 </div>
 
-                <div class="mb-3">
-                    <span class="font-weight-normal text-accent d-flex align-items-end gap-2">
-                        {!! getPriceRangeWithDiscount(product: $product) !!}
-                    </span>
-                </div>
+
+             @if ($product->price_type == "single_price")
+             <div class="mb-3">
+                <span class="font-weight-normal text-accent d-flex align-items-end gap-2">
+                    {!! getPriceRangeWithDiscount(product: $product) !!}
+                </span>
+            </div>
+             @endif
                 <form id="add-to-cart-form" class="mb-2">
                     @csrf
                     <input type="hidden" name="id" value="{{ $product->id }}">
@@ -246,53 +252,85 @@
                             </div>
                         @endforeach
                     @endif
+                    @if ($product->price_type == 'multiple_price' && json_decode($product->product_multi_price,true))
+                    @php($product_multi_price = json_decode($product->product_multi_price,true))
+                    <h6 class="mt-2 font-weight-bold">{{ translate('price_before_shipping') }}</h6>
+                    <div class="row" style="display: flex">
+                    @foreach ($product_multi_price as $key => $price)
+                                <div class="m-3" style="display: flex; flex-direction: column;">
 
-                    <div class="mb-3">
-                        <div class="product-quantity d-flex flex-column __gap-15">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="product-description-label text-dark font-bold mt-0">{{translate('quantity')}}
-                                    :
-                                </div>
-                                <div class="d-flex justify-content-center align-items-center quantity-box border rounded border-base web-text-primary">
-                                <span class="input-group-btn">
-                                    <button class="btn btn-number __p-10 web-text-primary" type="button" data-type="minus"
-                                            data-field="quantity"
-                                            disabled="disabled">
-                                        -
-                                    </button>
-                                </span>
-                                    <input type="text" name="quantity"
-                                           class="form-control input-number text-center cart-qty-field __inline-29 border-0 "
-                                           placeholder="{{ translate('1') }}" value="{{ $product->minimum_order_qty ?? 1 }}"
-                                           data-producttype="{{ $product->product_type }}"
-                                           min="{{ $product->minimum_order_qty ?? 1 }}"
-                                           max="{{$product['product_type'] == 'physical' ? $product->current_stock : 100}}">
-                                    <span class="input-group-btn">
-                                    <button class="btn btn-number __p-10 web-text-primary" type="button"
-                                            data-producttype="{{ $product->product_type }}"
-                                            data-type="plus" data-field="quantity">
-                                        +
-                                    </button>
-                                </span>
-                                </div>
-                                <input type="hidden" class="product-generated-variation-code" name="product_variation_code" data-product-id="{{ $product['id'] }}">
-                                <input type="hidden" value="" class="in_cart_key form-control w-50" name="key">
-                            </div>
-                            <div id="chosen_price_div">
-                                <div
-                                        class="d-flex justify-content-start align-items-center me-2">
-                                    <div class="product-description-label text-dark font-bold text-capitalize">
-                                        <strong>{{translate('total_price')}}</strong> :
+                                            <span class="key text-capitalize d-block mb-1">
+                                                @if ($loop->last)
+                                                >= {{ $price['start_point'] }} {{ translate('pieces') }}
+                                            @else
+                                                {{ $price['start_point'] }} - {{ $price['end_point'] }} {{ translate('pieces') }}
+                                            @endif
+                                            </span>
+
+                                            @if($product->discount > 0)
+                                                            <del class="category-single-product-price">
+                                                                {{ webCurrencyConverter(amount: $price['price']) }}
+                                                            </del>
+                                                            @endif
+                                                           <strong> <span class="value">
+                                                            {{ webCurrencyConverter(amount:
+                                                                $price['price']-(getProductDiscount(product: $product, price: $price['price']))
+                                                            ) }}
+                                                        </span></strong>
                                     </div>
-                                    &nbsp; <strong id="chosen_price" class="text-base"></strong>
-                                    <small class="ms-2 font-regular">
-                                        (<small>{{translate('tax')}} : </small>
-                                        <small id="set-tax-amount"></small>)
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
+                @endforeach
                     </div>
+                @endif
+               @if ($product ->price_type == "single_price")
+               <div class="mb-3">
+                <div class="product-quantity d-flex flex-column __gap-15">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="product-description-label text-dark font-bold mt-0">{{translate('quantity')}}
+                            :
+                        </div>
+                        <div class="d-flex justify-content-center align-items-center quantity-box border rounded border-base web-text-primary">
+                        <span class="input-group-btn">
+                            <button class="btn btn-number __p-10 web-text-primary" type="button" data-type="minus"
+                                    data-field="quantity"
+                                    disabled="disabled">
+                                -
+                            </button>
+                        </span>
+                            <input type="text" name="quantity"
+                                   class="form-control input-number text-center cart-qty-field __inline-29 border-0 "
+                                   placeholder="{{ translate('1') }}" value="{{ $product->minimum_order_qty ?? 1 }}"
+                                   data-producttype="{{ $product->product_type }}"
+                                   min="{{ $product->minimum_order_qty ?? 1 }}"
+                                   max="{{$product['product_type'] == 'physical' ? $product->current_stock : 100}}">
+                            <span class="input-group-btn">
+                            <button class="btn btn-number __p-10 web-text-primary" type="button"
+                                    data-producttype="{{ $product->product_type }}"
+                                    data-type="plus" data-field="quantity">
+                                +
+                            </button>
+                        </span>
+                        </div>
+                        <input type="hidden" class="product-generated-variation-code" name="product_variation_code" data-product-id="{{ $product['id'] }}">
+                        <input type="hidden" value="" class="in_cart_key form-control w-50" name="key">
+                    </div>
+                  @if($product->price_type == "single_price")
+                  <div id="chosen_price_div">
+                    <div
+                            class="d-flex justify-content-start align-items-center me-2">
+                        <div class="product-description-label text-dark font-bold text-capitalize">
+                            <strong>{{translate('total_price')}}</strong> :
+                        </div>
+                        &nbsp; <strong id="chosen_price" class="text-base"></strong>
+                        <small class="ms-2 font-regular">
+                            (<small>{{translate('tax')}} : </small>
+                            <small id="set-tax-amount"></small>)
+                        </small>
+                    </div>
+                </div>
+                  @endif
+                </div>
+            </div>
+               @endif
 
                     @php($guestCheckout = getWebConfig(name: 'guest_checkout'))
                     <div class="__btn-grp align-items-center mb-2">
@@ -301,25 +339,100 @@
                         <= $seller_vacation_end_date))) || ($product->added_by == 'admin' && ($inhouse_temporary_close ||
                             ($inHouseVacationStatus && $currentDate >= $inhouse_vacation_start_date && $currentDate <=
                                 $inhouse_vacation_end_date))))
+                         @if ($product->price_type == 'single_price')
+                         <button class="btn btn-secondary" type="button" disabled>
+                             {{ translate('buy_now') }}
+                         </button>
+                         <button class="btn btn--primary string-limit" type="button" disabled>
+                             {{ translate('add_to_cart') }}
+                         </button>
+                         @endif
+                         @if ($product->price_type == 'priceless')
+                         <button class="btn btn-secondary" type="button" disabled>
+                           {{ translate('contact_supplier') }}
+                       </button>
+                       <button class="btn btn--primary string-limit" type="button" disabled>
+                           {{ translate('Request_Price') }}
+                       </button>
+                         @endif
+                         @if ($product->price_type == 'multiple_price')
+                         <button class="btn btn-secondary" type="button" disabled>
+                           {{ translate('start_order_request') }}
+                       </button>
+                       <button class="btn btn--primary string-limit" type="button" disabled>
+                           {{ translate('contact_supplier') }}
+                       </button>
+                         @endif
 
-                            <button class="btn btn-secondary" type="button" disabled>
-                                {{translate('buy_now')}}
-                            </button>
-
-                            <button class="btn btn--primary string-limit" type="button" disabled>
-                                {{translate('add_to_cart')}}
-                            </button>
                         @else
-                            <button class="btn btn-secondary action-buy-now-this-product"
-                                type="button"
-                                data-auth-status="{{($guestCheckout == 1 || Auth::guard('customer')->check() ? 'true':'false')}}"
-                                data-route="{{ route('shop-cart') }}"
-                            >
-                                {{translate('buy_now')}}
-                            </button>
-                            <button class="btn btn--primary string-limit action-add-to-cart-form" type="button" data-update-text="{{ translate('update_cart') }}" data-add-text="{{ translate('add_to_cart') }}">
-                                {{translate('add_to_cart')}}
-                            </button>
+                        @if ($product->price_type == 'single_price')
+                        <button type="button"
+                            data-auth-status="{{($guestCheckout == 1 || Auth::guard('customer')->check() ? 'true':'false')}}"
+                            data-route="{{ route('shop-cart') }}"
+                            class="btn btn-secondary element-center btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}} action-buy-now-this-product">
+                            <span class="string-limit">{{ translate('buy_now') }}</span>
+                        </button>
+                        <button class="btn btn--primary element-center btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}} action-add-to-cart-form"
+                            type="button" data-update-text="{{ translate('update_cart') }}" data-add-text="{{ translate('add_to_cart') }}">
+                            <span class="string-limit">{{ translate('add_to_cart') }}</span>
+                        </button>
+                        @endif
+                        @if ($product->price_type == 'priceless')
+                        @if(auth('customer')->check())
+                        <button type="button" data-toggle="modal" data-target="#contact_supplier"
+                        data-auth-status="{{($guestCheckout == 1 || Auth::guard('customer')->check() ? 'true':'false')}}"
+                        data-route="{{ route('shop-cart') }}"
+                        class="btn btn-secondary element-center btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}} action-contact-now-this-product">
+                        <span class="string-limit">{{ translate('contact_supplier') }}</span>
+                    </button>
+                    <button class="btn btn--primary element-center btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}}"
+                        type="button" data-toggle="modal" data-target="#request_price" data-update-text="{{ translate('Price_Request') }}" data-add-text="{{ translate('Price_Request') }}">
+                        <span class="string-limit">{{ translate('Price_Request') }}</span>
+                    </button>
+                            @else
+                            <a href="{{route('customer.auth.login')}}"
+                            data-auth-status="{{($guestCheckout == 1 || Auth::guard('customer')->check() ? 'true':'false')}}"
+                            class="btn btn-secondary element-center btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}} action-contact-now-this-product">
+                            <span class="string-limit">{{ translate('contact_supplier') }}</span>
+                        </a>
+                        <a class="btn btn--primary element-center btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}}"
+                        href="{{route('customer.auth.login')}}" data-update-text="{{ translate('Price_Request') }}" data-add-text="{{ translate('Price_Request') }}">
+                            <span class="string-limit">{{ translate('Price_Request') }}</span>
+                        </a>
+                        @endif
+                        @endif
+
+                        @if ($product->price_type == 'multiple_price')
+                        @if(auth('customer')->check())
+                        <button
+                        class="btn btn-secondary btn-sm btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}}"
+                        type="button"
+                        data-auth-status="{{($guestCheckout == 1 || Auth::guard('customer')->check() ? 'true':'false')}}"
+                        data-route="{{ route('shop-cart') }}" onclick="multiplePrice('{{ $product->slug }}')"
+                    >
+                        <span class="string-limit">{{translate('start_order_request')}}</span>
+                    </button>
+                    <button type="button" data-toggle="modal" data-target="#contact_supplier"
+                    data-auth-status="{{($guestCheckout == 1 || Auth::guard('customer')->check() ? 'true':'false')}}"
+                    data-route="{{ route('shop-cart') }}"
+                    class="btn btn-secondary element-center btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}} action-contact-now-this-product">
+                    <span class="string-limit">{{ translate('contact_supplier') }}</span>
+                </button>
+                            @else
+                            <a
+                        class="btn btn-secondary btn-sm btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}}"
+                        href="{{route('customer.auth.login')}}"
+                        data-auth-status="{{($guestCheckout == 1 || Auth::guard('customer')->check() ? 'true':'false')}}"
+                    >
+                        <span class="string-limit">{{translate('start_order_request')}}</span>
+                    </a>
+                    <a href="{{route('customer.auth.login')}}"
+                    data-auth-status="{{($guestCheckout == 1 || Auth::guard('customer')->check() ? 'true':'false')}}"
+                    class="btn btn-secondary element-center btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}} action-contact-now-this-product">
+                    <span class="string-limit">{{ translate('contact_supplier') }}</span>
+                </a>
+                        @endif
+                        @endif
                         @endif
 
                         <button type="button" data-product-id="{{$product['id']}}" class="btn __text-18px border product-action-add-wishlist">
@@ -358,6 +471,99 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="contact_supplier" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">{{ $product->name }}</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body priceless-modal">
+              <form method="post" action="{{ route('product-inquiry') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="form-group">
+                    <input type="hidden" class="form-control" name="product_id" id="product_id" value="{{ $product->id }}">
+                  <label for="name" class="col-form-label"><strong>{{ translate('quantity') }}</strong></label>
+                  <input type="number" class="form-control" min="1" id="quantity" name="quantity" required placeholder="{{translate('total_Quantity')}}">
+                </div>
+                <div class="form-group">
+                  <label for="message-text" class="col-form-label"><strong>{{ translate('descriptions') }}</strong></label>
+                  <textarea class="form-control" id="descriptions" name="descriptions" placeholder="{{ translate('Describe_your_sourcing_requirments_for_products') }}" required></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="name" class="col-form-label"><strong>{{ translate('name') }}</strong></label>
+                  <input type="text" class="form-control" id="name" name="name" required placeholder="{{translate('your_Name')}}">
+                </div>
+                <div class="form-group">
+                    <label for="name" class="col-form-label"><strong>{{ translate('email') }}</strong></label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="{{translate('your_E_-_mail')}}" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="name" class="col-form-label"><strong>{{ translate('phone') }}</strong></label>
+                    <input type="text" class="form-control" id="phone" name="phone" placeholder="{{translate('contact_Number')}}" required>
+                  </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn--primary element-center btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}}">Send Enquiry</button>
+                  </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <div class="modal fade" id="request_price" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">{{ $product->name }}</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body priceless-modal">
+              <form method="post" action="{{ route('product-price-inquiry') }}" enctype="multipart/form-data">
+                @csrf
+               <input type="hidden" class="form-control" name="product_id" id="product_id" value="{{ $product->id }}">
+                <div class="form-group">
+                  <label for="message-text" class="col-form-label"><strong>{{ translate('descriptions') }}</strong></label>
+                  <textarea class="form-control" id="descriptions" name="descriptions" placeholder="{{ translate('Describe_your_sourcing_requirments_for_products') }}" required></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="name" class="col-form-label"><strong>{{ translate('name') }}</strong></label>
+                  <input type="text" class="form-control" id="name" name="name" required placeholder="{{translate('your_Name')}}">
+                </div>
+                <div class="form-group">
+                    <label for="name" class="col-form-label">{{ translate('company') }}</label>
+                    <input type="text" class="form-control" id="company" name="company" required placeholder="{{translate('your_Company')}}">
+                  </div>
+                <div class="form-group">
+                    <label for="name" class="col-form-label"><strong>{{ translate('email') }}</strong></label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="{{translate('your_E_-_mail')}}" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="name" class="col-form-label"><strong>{{ translate('pin') }}</strong></label>
+                    <input type="text" class="form-control" id="pin" name="pin" placeholder="{{translate('PIN')}}" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="name" class="col-form-label"><strong>{{ translate('phone') }}</strong></label>
+                    <input type="text" class="form-control" id="phone" name="phone" placeholder="{{translate('contact_Number')}}" required>
+                  </div>
+                        <input type="checkbox" name="is_dealer" class="endless" />
+                        <label class="endless-label mt-6"><strong>{{ translate('i_am_a_dealer') }}</strong></label>
+                        <br>
+                        <input type="checkbox" name="similar_info" class="endless" />
+                        <label class="endless-label mt-6"><strong>{{ translate('receive_offers_for_similar_products') }}</strong></label>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn--primary element-center btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}}">Send Enquiry</button>
+                  </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
 </div>
 
 <script type="text/javascript">
@@ -367,4 +573,10 @@
 
 <script type="text/javascript" async="async"
         src="https://platform-api.sharethis.com/js/sharethis.js#property=5f55f75bde227f0012147049&product=sticky-share-buttons"></script>
+
+        <script>
+            function multiplePrice(slug){
+                location.href = "{{ route('multiple-price') }}" + '?product_id='+slug;
+            }
+        </script>
 

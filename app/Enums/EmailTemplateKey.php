@@ -22,6 +22,9 @@ enum EmailTemplateKey
     const REGISTRATION_VERIFICATION = 'registration-verification';
     const REGISTRATION_FROM_POS = 'registration-from-pos';
     const RESET_PASSWORD_VERIFICATION = 'reset-password-verification';
+    const ORDER_REQUEST = 'order-request';
+    const CONTACT_SUPPLIER = 'contact-supplier';
+    const PRICE_REQUEST = 'price-request';
 
     const ADMIN_EMAIL_LIST = [
         EmailTemplateKey::ORDER_RECEIVED,
@@ -45,6 +48,9 @@ enum EmailTemplateKey
         EmailTemplateKey::DIGITAL_PRODUCT_DOWNLOAD,
         EmailTemplateKey::DIGITAL_PRODUCT_OTP,
         EmailTemplateKey::ADD_FUND_TO_WALLET ,
+        EmailTemplateKey::ORDER_REQUEST ,
+        EmailTemplateKey::CONTACT_SUPPLIER ,
+        EmailTemplateKey::PRICE_REQUEST ,
     ];
     const DELIVERY_MAN_EMAIL_LIST = [
         EmailTemplateKey::RESET_PASSWORD_VERIFICATION ,

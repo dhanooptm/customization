@@ -22,9 +22,11 @@ use App\Exports\ProductListExport;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\ProductAddRequest;
 use App\Http\Requests\ProductUpdateRequest;
+use App\Models\Product as ModelsProduct;
 use App\Repositories\TranslationRepository;
 use App\Services\ProductService;
 use App\Traits\FileManagerTrait;
+use App\Utils\Helpers;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -123,6 +125,14 @@ class ProductController extends BaseController
 
     public function add(ProductAddRequest $request, ProductService $service): JsonResponse|RedirectResponse
     {
+
+        if($request->price_type=="multiple_price"){
+
+            $productMultiPrice = json_decode($request->product_multi_price, true);
+              Helpers::multi_price_check($productMultiPrice,$request,true);
+        }
+
+
         if ($request->ajax()) {
             return response()->json([], 200);
         }
@@ -168,6 +178,12 @@ class ProductController extends BaseController
 
     public function update(ProductUpdateRequest $request, ProductService $service, string|int $id): JsonResponse|RedirectResponse
     {
+        if($request->price_type=="multiple_price"){
+            $product= ModelsProduct::where('id',$id)->first();
+            $productMultiPrice = $request->product_multi_price ? json_decode($request->product_multi_price, true) :json_decode($product->product_multi_price, true);
+            $productMultiPrice = json_decode($request->product_multi_price, true);
+              Helpers::multi_price_check($productMultiPrice,$request);
+        }
         if ($request->ajax()) {
             return response()->json([], 200);
         }
@@ -613,4 +629,13 @@ class ProductController extends BaseController
         }
 
     }
+
+    public function getPriceRange($id)
+    {
+        $selectedProducts = $this->productRepo->getFirstWhere(params: ['id' => $id]);
+
+         return Helpers::multi_price_format($selectedProducts->product_multi_price);
+
+    }
+
 }

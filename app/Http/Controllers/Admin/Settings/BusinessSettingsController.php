@@ -17,6 +17,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class BusinessSettingsController extends BaseController
 {
@@ -109,6 +110,8 @@ class BusinessSettingsController extends BaseController
         $this->businessSettingRepo->updateOrInsert(type: 'business_mode', value: $request['business_mode']);
         $this->businessSettingRepo->updateOrInsert(type: 'country_code', value: $request['country_code']);
 
+        Cache::put('business_mode_config', $request['business_mode']);
+
         $colors = json_encode(['primary' => $request['primary'], 'secondary' => $request['secondary'], 'primary_light' => $request['primary_light'] ?? '#CFDFFB']);
         $this->businessSettingRepo->updateOrInsert(type: 'colors', value: $colors);
 
@@ -167,9 +170,8 @@ class BusinessSettingsController extends BaseController
                 'image_name' =>  $loaderGifImage,
                 'storage' => config('filesystems.disks.default') ?? 'public'
             ];
-            $this->businessSettingRepo->updateOrInsert(type: 'loader_gif', value: $loaderGifImageArray);
+            $this->businessSettingRepo->updateOrInsert(type: 'loader_gif', value: json_encode($loaderGifImageArray));
         }
-
         $language = $this->businessSettingRepo->getFirstWhere(params: ['type'=>'language']);
         $languageArray = $businessSettingService->getLanguageData(request: $request, language: $language);
         $this->businessSettingRepo->updateWhere(params: ['type'=>'language'],data: ['value' => $languageArray]);
@@ -309,6 +311,10 @@ class BusinessSettingsController extends BaseController
 
     public function updateProductSettings(Request $request): RedirectResponse
     {
+        $status = $request->get('digital_product', 0);
+        Cache::put('digital_product_config', ($status ? 'active' : 'inactive'));
+		Cache::put('product_brand_config', ($request->get('product_brand', 0) ? 'active' : 'inactive'));
+
         $this->businessSettingRepo->updateOrInsert(type: 'stock_limit', value: $request->get('stock_limit', 0));
         $this->businessSettingRepo->updateOrInsert(type: 'product_brand', value: $request->get('product_brand', 0));
         $this->businessSettingRepo->updateOrInsert(type: 'digital_product', value: $request->get('digital_product', 0));

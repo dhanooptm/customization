@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Contracts\Repositories\TranslationRepositoryInterface;
 use App\Enums\ViewPaths\Admin\EmailTemplate;
 use App\Http\Controllers\BaseController;
+use App\Models\OrderRequest;
 use App\Repositories\BusinessSettingRepository;
 use App\Repositories\EmailTemplatesRepository;
 use App\Repositories\SocialMediaRepository;
@@ -39,6 +40,10 @@ class   EmailTemplatesController extends BaseController
         $language = $this->businessSettingRepo->getFirstWhere(params: ['type' => 'pnc_language']);
         $socialMedia = $this->socialMediaRepo->getListWhere(filters:['status'=>1],dataLimit: 'all');
         $template = $this->emailTemplatesRepo->getFirstWhere(params:['user_type'=>$userType,'template_name'=>$templateName],relations: ['translations','translationCurrentLanguage']);
+
+        // $order = OrderRequest::where('id','100058')->first();
+        // $data['order'] = $order;
+        // $data['send-mail'] = true;
         return view(EmailTemplate::VIEW[VIEW],compact('template','language','socialMedia'));
     }
     protected function getEmailTemplateForData($userType):Collection

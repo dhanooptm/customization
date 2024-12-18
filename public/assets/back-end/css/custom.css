@@ -1400,3 +1400,9 @@ input[name="gateway_image"] {
 .object-fit-cover {
     object-fit: cover !important;
 }
+.max-width-500px {
+    max-width: 500px;
+}
+.max-width-700px {
+    max-width: 700px;
+}

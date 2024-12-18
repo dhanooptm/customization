@@ -163,7 +163,9 @@ use App\Http\Controllers\Admin\Vendor\WithdrawalMethodController;
 use App\Http\Controllers\Admin\VendorProductSaleReportController;
 use App\Http\Controllers\SharedController;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Admin\Product\PriceRangeController;
+use App\Http\Controllers\Admin\Product\ProductInquiryController;
+use App\Http\Controllers\Admin\Order\OrderRequestController;
 
 Route::post('change-language', [SharedController::class, 'changeLanguage'])->name('change-language');
 
@@ -255,8 +257,28 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin']],
             Route::get(Product::MULTIPLE_PRODUCT_DETAILS[URI], 'getMultipleProductDetailsView')->name('multiple-product-details');
             Route::get(Product::PRODUCT_GALLERY[URI], 'getProductGalleryView')->name('product-gallery');
             Route::get(Product::STOCK_LIMIT_STATUS[URI] . '/{type}', 'getStockLimitStatus')->name('stock-limit-status');
+            Route::get(Product::GET_PRICE_RANGE[URI].'/{id}' , 'getPriceRange')->name('get-price-range');
 
         });
+        Route::group(['prefix' => 'range', 'as' => 'range.'], function () {
+        Route::get('range-add', [PriceRangeController::class, 'index'])->name('range-add');
+        Route::get('range-list', [PriceRangeController::class, 'index'])->name('range-list');
+        Route::post('store', [PriceRangeController::class, 'store'])->name('store');
+        Route::get('edit/{id}', [PriceRangeController::class, 'edit'])->name('edit');
+        Route::post('update/{id}', [PriceRangeController::class, 'update'])->name('update');
+        Route::delete('delete/{id}', [PriceRangeController::class, 'destroy'])->name('delete');
+    });
+    Route::group(['prefix' => 'inquiry', 'as' => 'inquiry.'], function () {
+        Route::get('list', [ProductInquiryController::class, 'list'])->name('list');
+        Route::post('status-update', [ProductInquiryController::class, 'status_update'])->name('status-update');
+        Route::get('view/{id}', [ProductInquiryController::class, 'view'])->name('view');
+        Route::delete('delete/{id}', [ProductInquiryController::class, 'destroy'])->name('delete');
+
+        Route::get('request-list', [ProductInquiryController::class, 'request_list'])->name('request-list');
+        Route::post('price-status-update', [ProductInquiryController::class, 'price_status_update'])->name('price-status-update');
+        Route::get('view/{id}', [ProductInquiryController::class, 'view'])->name('view');
+        Route::delete('price-delete/{id}', [ProductInquiryController::class, 'price_destroy'])->name('price-delete');
+    });
     });
 
     Route::group(['prefix' => 'orders', 'as' => 'orders.','middleware'=>['module:order_management']], function () {
@@ -275,6 +297,18 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin']],
             Route::post(Order::DIGITAL_FILE_UPLOAD_AFTER_SELL[URI], 'uploadDigitalFileAfterSell')->name('digital-file-upload-after-sell');
             Route::post(Order::UPDATE_STATUS[URI], 'updateStatus')->name('status');
             Route::get(Order::GET_DATA[URI], 'getOrderData')->name('get-order-data');
+        });
+    });
+    Route::group(['prefix' => 'orders', 'as' => 'orders.','middleware'=>['module:order_management']], function () {
+        Route::group(['prefix' => 'order-request', 'as' => 'order-request.'], function () {
+            Route::controller(OrderRequestController::class)->group(function () {
+                Route::get('list', 'index')->name('list');
+                Route::get('details/{id}', 'details')->name('details');
+                Route::get('export/{status}', 'exportList')->name('export-excel');
+                Route::get('generate-invoice/{id}', 'generate_invoice')->name('generate-invoice');
+                Route::post('read-status', 'updateReadStatus')->name('read-status');
+
+            });
         });
     });
 

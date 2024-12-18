@@ -128,5 +128,6 @@ interface ProductRepositoryInterface extends RepositoryInterface
     public function getProductIds(array $filters = []): \Illuminate\Support\Collection|array;
 
     public function updateByParams(array $params, array $data): bool;
+    public function getPosListWhere(array $orderBy=[], string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator;
 
 }

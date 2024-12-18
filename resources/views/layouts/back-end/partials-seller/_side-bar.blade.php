@@ -268,6 +268,31 @@
                                 </li>
                             </ul>
                         </li>
+                        <li class="navbar-vertical-aside-has-menu {{Request::is('vendor/orders/order-request*')?'active':''}}">
+                            <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle"
+                               href="javascript:" title="{{translate('order_request')}}">
+                                <i class="tio-shopping-cart-outlined nav-icon"></i>
+                                <span
+                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('order_request')}}</span>
+                            </a>
+                            <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                                style="display: {{Request::is('vendor/orders/order-request*')?'block':'none'}}">
+                                {{-- <li class="nav-item {{Request::is('admin/products/range/range-add')?'active':''}}"
+                                    title="{{translate('add_new')}}">
+                                    <a class="nav-link " href="{{route('admin.products.range.range-add')}}">
+                                        <span class="tio-circle nav-indicator-icon"></span>
+                                        <span class="text-truncate">{{translate('add_new')}}</span>
+                                    </a>
+                                </li> --}}
+                                <li class="nav-item {{Request::is('vendor/orders/order-request/list')?'active':''}}"
+                                    title="{{translate('list')}}">
+                                    <a class="nav-link " href="{{route('vendor.orders.order-request.list')}}">
+                                        <span class="tio-circle nav-indicator-icon"></span>
+                                        <span class="text-truncate">{{translate('list')}}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
                         <li class="nav-item">
                             <small class="nav-subtitle">{{translate('product_management')}}</small>
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
@@ -336,6 +361,31 @@
                                     {{translate('product_Reviews')}}
                                 </span>
                             </a>
+                        </li>
+                        <li class="navbar-vertical-aside-has-menu {{Request::is('vendor/products/inquiry*')?'active':''}}">
+                            <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle"
+                               href="javascript:" title="{{translate('product_price_inquiry')}}">
+                                <i class="tio-star nav-icon"></i>
+                                <span
+                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('product_price_inquiry')}}</span>
+                            </a>
+                            <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                                style="display: {{Request::is('vendor/products/inquiry*')?'block':'none'}}">
+                                <li class="nav-item {{Request::is('vendor/products/inquiry/list')?'active':''}}"
+                                    title="{{translate('list')}}">
+                                    <a class="nav-link " href="{{route('vendor.products.inquiry.list')}}">
+                                        <span class="tio-circle nav-indicator-icon"></span>
+                                        <span class="text-truncate">{{translate('list')}}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item {{Request::is('vendor/products/inquiry/request-list')?'active':''}}"
+                                title="{{translate('list')}}">
+                                <a class="nav-link " href="{{route('vendor.products.inquiry.request-list')}}">
+                                    <span class="tio-circle nav-indicator-icon"></span>
+                                    <span class="text-truncate">{{translate('request_price')}}</span>
+                                </a>
+                            </li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <small class="nav-subtitle">{{translate('promotion_management')}}</small>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\RestAPI\v1;
 
 use App\Events\DigitalProductOtpVerificationEvent;
+use App\Events\OrderRequestEvent;
 use App\Events\RefundEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
@@ -10,6 +11,8 @@ use App\Models\DigitalProductOtpVerification;
 use App\Models\OfflinePaymentMethod;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\OrderRequest;
+use App\Models\Product;
 use App\Models\RefundRequest;
 use App\Models\Setting;
 use App\Models\ShippingAddress;
@@ -932,5 +935,151 @@ class OrderController extends Controller
         }
 
         return response()->json(['message' => 'Invalid Order Id or Phone Number'], 403);
+    }
+    public function place_order_request(Request $request): JsonResponse
+    {
+        $totalAmount = 0;
+        $errors = [];
+        $totalTax = 0;
+        $totalDiscount = 0;
+        $validVariants = [];
+        $err = false;
+        $order = new OrderRequest();
+      if($request->product_id && !$request->variation){
+        $product = Product::find($request->product_id);
+
+        if($request['quantity'] > $product['current_stock']){
+            $errors[] = "Quantity {$request['quantity']} is greater than stock";
+            $err = true;
+        }
+
+
+        $product_multi_price =  json_decode($product->product_multi_price,true);
+        $quantity = (int)$request['quantity'];
+        $priceToUse = null;
+        foreach ($product_multi_price as $range) {
+            $start = (int)$range['start_point'];
+            $end = $range['end_point'] !== null ? (int)$range['end_point'] : PHP_INT_MAX;
+
+            if ($quantity >= $start && $quantity <= $end) {
+                $priceToUse = (int)$range['price'];
+                break;
+            }
+
+            if ($range['endless'] && $quantity >= $start) {
+                $priceToUse = (int)$range['price'];
+                break;
+            }
+        }
+        if ($priceToUse !== null) {
+            $discount = Helpers::get_product_discount($product, $priceToUse);
+            $tax = 0;
+            if($product['tax_model'] == 'exclude'){
+                $tax = Helpers::tax_calculation(product: $product, price: $priceToUse, tax: $product['tax'], tax_type: $product['tax_type']);
+            }
+            $totalAmount += ($priceToUse * $quantity) - ($discount * $quantity) + ($tax * $quantity);
+            $totalDiscount +=  $discount * $quantity;
+            $totalTax +=  $tax * $quantity;
+
+            $order->price_range = $priceToUse;
+        } else {
+            $errors[] = "Quantity {$quantity} for product '{$product->name}' is out of range.";
+        }
+
+      }else{
+       $variations = $request->variation;
+        foreach( $variations as $key => $variant){
+            if( $variant['quantity'] > 0){
+
+                if($variant['quantity'] > $variant['qty']){
+                    $errors[] = "Quantity {$variant['qty']} is greater than stock";
+                    $err = true;
+                }
+
+              $product_id = $request->product_id;
+              $variantPrice = $variant['price'];
+
+              $product = Product::find($product_id);
+              if($variant['quantity'] < $product['minimum_order_qty']){
+                $errors[] = "Quantity {$variant['quantity']} less than minimum order quantity {$product['minimum_order_qty']} .";
+                $err = true;
+            }
+
+              $product_multi_price =  json_decode($product->product_multi_price,true);
+              $quantity = (int)$variant['quantity'];
+              $priceToUse = null;
+             foreach ($product_multi_price as $range) {
+                 $start = (int)$range['start_point'];
+                 $end = $range['end_point'] !== null ? (int)$range['end_point'] : PHP_INT_MAX;
+
+                 if ($quantity >= $start && $quantity <= $end) {
+                     $priceToUse = (int)$range['price'];
+                     break;
+                 }
+
+                 if ($range['endless'] && $quantity >= $start) {
+                     $priceToUse = (int)$range['price'];
+                     break;
+                 }
+             }
+             if ($priceToUse !== null) {
+              $discount = Helpers::get_product_discount($product, $priceToUse);
+              $tax = 0;
+              if($product['tax_model'] == 'exclude'){
+                  $tax = Helpers::tax_calculation(product: $product, price: $priceToUse, tax: $product['tax'], tax_type: $product['tax_type']);
+              }
+                 $totalAmount += ($priceToUse * $quantity) + $variantPrice - ($discount * $quantity) + ($tax * $quantity);
+                 $totalDiscount +=  $discount * $quantity;
+                 $totalTax +=  $tax * $quantity;
+                 $validVariants[] = [
+                    'variant_type' => $variant['type'],
+                    'variant_price' => $variant['price'],
+                    'quantity' => $quantity,
+                    'price_range' =>$priceToUse
+                ];
+
+             } else {
+                 $errors[] = "Quantity {$quantity} for variant type '{$variant['variant_type']}' is out of range.";
+             }
+            }
+
+          }
+      }
+    if(!$err){
+        $order->id = 100000 + OrderRequest::count() + 1;
+        if (OrderRequest::find($order->id)) {
+            $order->id = OrderRequest::orderBy('id', 'desc')->first()->id + 1;
+        }
+        $order->product_id = $product->id;
+        $order->order_amount = $totalAmount;
+        $order->discount = $totalDiscount;
+        $order->tax = $totalTax;
+        $order->customer_id = auth('api')->user() ? auth('api')->user()->id : null;
+        $order->seller_id = $product->added_by == 'seller' ? $product->user_id:null;
+        $order->variation = json_encode($validVariants);
+        $order->quantity = $request['quantity'] ? $request['quantity'] : 0;
+        $order->save();
+        try {
+            $user = User::where('id',auth('api')->user()->id)->first();
+            $email = $user->email;
+            $data = [
+                'subject' => translate('order_request'),
+                'title' => translate('order_request'),
+                'userName' => auth('api')->user()->name,
+                'userType' => 'customer',
+                'templateName' => 'order-request',
+                'order' => $order,
+                'orderId' => $order->id,
+                'shopName' => $order?->seller?->shop?->name ?? getWebConfig('company_name'),
+                'shopId' => $order?->seller?->shop?->id ?? 0,
+                // 'attachmentPath' =>self::storeInvoice($order->id),
+            ];
+            event(new OrderRequestEvent(email: $email, data: $data));
+        } catch (\Exception $exception) {
+        }
+
+        return response()->json(['message' => translate('order_request_send_successfully')], 200);
+    }
+    return response()->json(['message' => $errors,], 403);
     }
 }

@@ -1727,10 +1727,12 @@ function getVariantPrice() {
             url: $("#route-cart-variant-price").data("url"),
             data: $("#add-to-cart-form").serializeArray(),
             success: function (data) {
+                if(data.price_type !== 'priceless'){
                 $("#add-to-cart-form #chosen_price_div").removeClass("d-none");
                 $("#add-to-cart-form #chosen_price_div #chosen_price").html(
                     data.price
                 );
+            }
                 $("#chosen_price_mobile").html(data.price);
                 $("#set-tax-amount-mobile").html(data.update_tax);
                 $("#set-tax-amount").html(data.update_tax);

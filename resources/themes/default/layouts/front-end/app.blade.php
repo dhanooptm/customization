@@ -190,9 +190,16 @@
 <div class="floating-btn-grp">
     <div class="__floating-btn">
         @php($whatsapp = getWebConfig(name: 'whatsapp'))
-        @if(isset($whatsapp['status']) && $whatsapp['status'] == 1 )
+        @if(isset($whatsapp['status']) && $whatsapp['status'] == 1 && auth('customer')->check())
             <div class="wa-widget-send-button">
                 <a href="https://wa.me/{{ $whatsapp['phone'] }}?text=Hello%20there!" target="_blank">
+                    <img src="{{theme_asset(path: 'public/assets/front-end/img/whatsapp.svg')}}" class="wa-messenger-svg-whatsapp wh-svg-icon" alt="{{ translate('Chat_with_us_on_WhatsApp') }}">
+                </a>
+            </div>
+        @endif
+        @if(isset($whatsapp['status']) && $whatsapp['status'] == 1 && !auth('customer')->check())
+            <div class="wa-widget-send-button">
+                <a href="{{route('customer.auth.login')}}" target="_blank">
                     <img src="{{theme_asset(path: 'public/assets/front-end/img/whatsapp.svg')}}" class="wa-messenger-svg-whatsapp wh-svg-icon" alt="{{ translate('Chat_with_us_on_WhatsApp') }}">
                 </a>
             </div>

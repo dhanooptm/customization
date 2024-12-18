@@ -1,4 +1,4 @@
-<div class="__inline-9 rtl">
+<div class="__inline-9 rtl mt-3">
     <div class="text-center pb-4">
         <div class="max-w-860px mx-auto footer-slider-container">
             <div class="container">
@@ -254,21 +254,40 @@
                                 <div class="row text-start">
                                     <div class="col-12 start_address ">
                                         <div class="">
-                                            <a class="widget-list-link" href="{{ 'tel:'.$web_config['phone']->value }}">
+                                            @if(auth('customer')->check())
+                                         <a class="widget-list-link" href="{{ 'tel:'.$web_config['phone']->value }}">
+                                            <span class="">
+                                                <i class="fa fa-phone  me-2 mt-2 mb-2"></i>
+                                                <span class="direction-ltr">
+                                                    {{getWebConfig(name: 'company_phone')}}
+                                                </span>
+                                            </span>
+                                        </a>
+                                             @else
+                                             <a class="widget-list-link" href="{{route('customer.auth.login')}}">
                                                 <span class="">
                                                     <i class="fa fa-phone  me-2 mt-2 mb-2"></i>
                                                     <span class="direction-ltr">
-                                                        {{getWebConfig(name: 'company_phone')}}
+                                                        {{translate('contact_our_Support_Team')}}
                                                     </span>
                                                 </span>
                                             </a>
+                                         @endif
 
                                         </div>
                                         <div>
-                                            <a class="widget-list-link"
-                                               href="{{ 'mailto:'.getWebConfig(name: 'company_email') }}">
-                                                <span><i class="fa fa-envelope  me-2 mt-2 mb-2"></i> {{getWebConfig(name: 'company_email')}} </span>
-                                            </a>
+                                            @if(auth('customer')->check())
+                                           <a class="widget-list-link"
+                                           href="{{ 'mailto:'.getWebConfig(name: 'company_email') }}">
+                                            <span><i class="fa fa-envelope  me-2 mt-2 mb-2"></i> {{getWebConfig(name: 'company_email')}} </span>
+                                           </a>
+                                               @else
+                                               <a class="widget-list-link"
+                                               href="{{route('customer.auth.login')}}">
+                                                <span><i class="fa fa-envelope  me-2 mt-2 mb-2"></i> E-mail</span>
+                                               </a>
+
+                                           @endif
                                         </div>
                                         <div class="pe-3">
                                             @if(auth('customer')->check())

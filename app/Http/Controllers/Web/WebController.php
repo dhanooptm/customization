@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Utils\CategoryManager;
 use App\Utils\Helpers;
 use App\Events\DigitalProductOtpVerificationEvent;
+use App\Events\OrderRequestEvent;
 use App\Http\Controllers\Controller;
 use App\Models\OfflinePaymentMethod;
 use App\Models\ShippingAddress;
@@ -31,6 +32,7 @@ use App\Models\FlashDeal;
 use App\Models\FlashDealProduct;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\OrderRequest;
 use App\Models\ProductCompare;
 use App\Models\Seller;
 use App\Models\Setting;
@@ -79,10 +81,7 @@ class WebController extends Controller
         private Seller                                        $seller,
         private ProductCompare                                $compare,
         private readonly RobotsMetaContentRepositoryInterface $robotsMetaContentRepo,
-    )
-    {
-
-    }
+    ) {}
 
     public function maintenance_mode(): View|RedirectResponse
     {
@@ -160,8 +159,8 @@ class WebController extends Controller
         session()->put('product_brand', $brandStatus);
         if ($brandStatus == 1) {
             $brandList = Brand::active()->with(['brandProducts' => function ($query) {
-                    return $query->withCount(['orderDetails']);
-                }])
+                return $query->withCount(['orderDetails']);
+            }])
                 ->withCount('brandProducts')
                 ->when($request->has('search'), function ($query) use ($request) {
                     $query->where('name', 'LIKE', '%' . $request['search'] . '%');
@@ -182,7 +181,7 @@ class WebController extends Controller
             $paginateLimit = 12;
         } elseif (theme_root_path() == 'theme_fashion') {
             $paginateLimit = 10;
-        }else{
+        } else {
             $paginateLimit = 18;
         }
         $brandProductSortBy = getWebConfig(name: 'brand_list_priority');
@@ -208,7 +207,6 @@ class WebController extends Controller
         } else {
             return $query->orderBy('name', $orderBy)->latest()->paginate($paginateLimit)->appends(['order_by' => $orderBy, 'search' => $request['search']]);
         }
-
     }
 
     public function getAllVendorsView(Request $request): View|RedirectResponse
@@ -777,12 +775,11 @@ class WebController extends Controller
             return view(VIEW_FILE_NAMES['cart_list'], compact('topRatedShops', 'newSellers', 'currentDate', 'request'));
         }
         Toastr::warning(translate('please_login_your_account'));
-        if (theme_root_path() == 'default'){
+        if (theme_root_path() == 'default') {
             return redirect('customer/auth/login');
-        }else{
+        } else {
             return redirect('/');
         }
-
     }
 
     //ajax filter (category based)
@@ -839,9 +836,23 @@ class WebController extends Controller
         return response()->json([
             'success' => 1,
             'product' => $product,
-            'view' => view(VIEW_FILE_NAMES['product_quick_view_partials'], compact('product', 'countWishlist', 'countOrder',
-                'relatedProducts', 'currentDate', 'seller_vacation_start_date', 'seller_vacation_end_date', 'seller_temporary_close',
-                'inhouse_vacation_start_date', 'inhouse_vacation_end_date', 'inHouseVacationStatus', 'inhouse_temporary_close', 'wishlist_status', 'overallRating', 'rating'))->render(),
+            'view' => view(VIEW_FILE_NAMES['product_quick_view_partials'], compact(
+                'product',
+                'countWishlist',
+                'countOrder',
+                'relatedProducts',
+                'currentDate',
+                'seller_vacation_start_date',
+                'seller_vacation_end_date',
+                'seller_temporary_close',
+                'inhouse_vacation_start_date',
+                'inhouse_vacation_end_date',
+                'inHouseVacationStatus',
+                'inhouse_temporary_close',
+                'wishlist_status',
+                'overallRating',
+                'rating'
+            ))->render(),
         ]);
     }
 
@@ -969,7 +980,6 @@ class WebController extends Controller
         }
 
         return view(VIEW_FILE_NAMES['products_view_page'], compact('products', 'data'), $data);
-
     }
 
     public function viewWishlist(Request $request): View
@@ -1017,7 +1027,6 @@ class WebController extends Controller
                         'count' => $countWishlist,
                         'product_count' => $product_count
                     ]);
-
                 } else {
                     $wishlist = new Wishlist;
                     $wishlist->customer_id = auth('customer')->id();
@@ -1034,12 +1043,12 @@ class WebController extends Controller
 
                     return response()->json([
                         'success' => translate("Product has been added to wishlist"),
-                        'value' => 1, 'count' => $countWishlist,
+                        'value' => 1,
+                        'count' => $countWishlist,
                         'id' => $request->product_id,
                         'product_count' => $product_count
                     ]);
                 }
-
             } else {
                 return response()->json(['error' => translate('login_first'), 'value' => 0]);
             }
@@ -1113,7 +1122,6 @@ class WebController extends Controller
                         },
                     ],
                 ]);
-
             } catch (\Exception $exception) {
                 return back()->withErrors(translate('Captcha Failed'))->withInput($request->input());
             }
@@ -1499,7 +1507,6 @@ class WebController extends Controller
                     $guestPhone = $orderDetailsData->order->customer->phone;
                 }
             } catch (\Throwable $th) {
-
             }
 
             $verifyData = [
@@ -1558,7 +1565,6 @@ class WebController extends Controller
                 'new_time' => $otpIntervalTime,
                 'message' => ($mailStatus || $smsStatus) ? translate('OTP_sent_successfully') : translate('OTP_sent_fail'),
             ]);
-
         }
     }
 
@@ -1738,5 +1744,155 @@ class WebController extends Controller
             'methodHtml' => view(VIEW_FILE_NAMES['pay_offline_method_list_partials'], compact('method'))->render(),
         ]);
     }
+    public function order_placed_request(Request $request)
+    {
+        $totalAmount = 0;
+        $errors = [];
+        $totalTax = 0;
+        $totalDiscount = 0;
+        $validVariants = [];
+        $err = false;
+        $order = new OrderRequest();
+        if ($request->product_id) {
+            $product = Product::find($request->product_id);
 
+            if ($request['quantity'] > $product['current_stock']) {
+                $errors[] = "Quantity {$request['quantity']} is greater than stock";
+                $err = true;
+            }
+
+
+            $product_multi_price =  json_decode($product->product_multi_price, true);
+            $quantity = (int)$request['quantity'];
+            $priceToUse = null;
+            foreach ($product_multi_price as $range) {
+                $start = (int)$range['start_point'];
+                $end = $range['end_point'] !== null ? (int)$range['end_point'] : PHP_INT_MAX;
+
+                if ($quantity >= $start && $quantity <= $end) {
+                    $priceToUse = (int)$range['price'];
+                    break;
+                }
+
+                if ($range['endless'] && $quantity >= $start) {
+                    $priceToUse = (int)$range['price'];
+                    break;
+                }
+            }
+            if ($priceToUse !== null) {
+                $discount = Helpers::get_product_discount($product, $priceToUse);
+                $tax = 0;
+                if ($product['tax_model'] == 'exclude') {
+                    $tax = Helpers::tax_calculation(product: $product, price: $priceToUse, tax: $product['tax'], tax_type: $product['tax_type']);
+                }
+                $totalAmount += ($priceToUse * $quantity) - ($discount * $quantity) + ($tax * $quantity);
+                $totalDiscount +=  $discount * $quantity;
+                $totalTax +=  $tax * $quantity;
+
+                $order->price_range = $priceToUse;
+            } else {
+                $errors[] = "Quantity {$quantity} for product '{$product->name}' is out of range.";
+            }
+        } else {
+            foreach ($request->variants as $key => $variant) {
+                if ($variant['quantity'] > 0) {
+
+                    if ($variant['quantity'] > $variant['variant_stock']) {
+                        $errors[] = "Quantity {$variant['quantity']} is greater than stock";
+                        $err = true;
+                    }
+
+                    $product_id = $variant['cart_id'];
+                    $variantPrice = $variant['variant_price'];
+
+                    $product = Product::find($product_id);
+                    if ($variant['quantity'] < $product['minimum_order_qty']) {
+                        $errors[] = "Quantity {$variant['quantity']} less than minimum order quantity {$product['minimum_order_qty']} .";
+                        $err = true;
+                    }
+                    $product_multi_price =  json_decode($product->product_multi_price, true);
+                    $quantity = (int)$variant['quantity'];
+                    $priceToUse = null;
+                    foreach ($product_multi_price as $range) {
+                        $start = (int)$range['start_point'];
+                        $end = $range['end_point'] !== null ? (int)$range['end_point'] : PHP_INT_MAX;
+
+                        if ($quantity >= $start && $quantity <= $end) {
+                            $priceToUse = (int)$range['price'];
+                            break;
+                        }
+
+                        if ($range['endless'] && $quantity >= $start) {
+                            $priceToUse = (int)$range['price'];
+                            break;
+                        }
+                    }
+                    if ($priceToUse !== null) {
+                        $discount = Helpers::get_product_discount($product, $priceToUse);
+                        $tax = 0;
+                        if ($product['tax_model'] == 'exclude') {
+                            $tax = Helpers::tax_calculation(product: $product, price: $priceToUse, tax: $product['tax'], tax_type: $product['tax_type']);
+                        }
+                        $totalAmount += ($priceToUse * $quantity) + $variantPrice - ($discount * $quantity) + ($tax * $quantity);
+                        $totalDiscount +=  $discount * $quantity;
+                        $totalTax +=  $tax * $quantity;
+                        $validVariants[] = [
+                            'variant_type' => $variant['variant_type'],
+                            'variant_price' => $variant['variant_price'],
+                            'quantity' => $quantity,
+                            'price_range' => $priceToUse
+                        ];
+                    } else {
+                        $errors[] = "Quantity {$quantity} for variant type '{$variant['variant_type']}' is out of range.";
+                    }
+                }
+            }
+        }
+        $order_id = 0;
+        if (!$err) {
+            $order->id = 100000 + OrderRequest::count() + 1;
+            if (OrderRequest::find($order->id)) {
+                $order->id = OrderRequest::orderBy('id', 'desc')->first()->id + 1;
+            }
+            $order->product_id = $product->id;
+            $order->order_amount = $totalAmount;
+            $order->discount = $totalDiscount;
+            $order->tax = $totalTax;
+            $order->customer_id = auth('customer')->id();
+            $order->seller_id = $product->added_by == 'seller' ? $product->user_id : null;
+            $order->variation = json_encode($validVariants);
+            $order->quantity = $request['quantity'] ? $request['quantity'] : 0;
+            $order->save();
+            $order_id = $order->id;
+
+            $email = auth('customer')->user()['email'];
+            try {
+
+                $data = [
+                    'subject' => translate('order_request'),
+                    'title' => translate('order_request'),
+                    'userName' => auth('customer')->user()->name,
+                    'userType' => 'customer',
+                    'templateName' => 'order-request',
+                    'order' => $order,
+                    'orderId' => $order->id,
+                    'shopName' => $order?->seller?->shop?->name ?? getWebConfig('company_name'),
+                    'shopId' => $order?->seller?->shop?->id ?? 0,
+                    // 'attachmentPath' =>self::storeInvoice($order->id),
+                ];
+                event(new OrderRequestEvent(email: $email, data: $data));
+            } catch (\Exception $exception) {
+                info($exception->getMessage());
+            }
+        }
+
+        return response()->json(['totalDiscount' => Helpers::currency_converter($totalDiscount), 'totalTax' => Helpers::currency_converter($totalTax), 'totalAmount' => Helpers::currency_converter($totalAmount), 'errors' => $errors, 'order_id' => $order_id]);
+    }
+    public function order_placed_complete(Request $request)
+    {
+        $order_id = $request->order_id;
+        return view(VIEW_FILE_NAMES['complete_request'], [
+            'id' => $order_id
+        ]);
+    }
 }

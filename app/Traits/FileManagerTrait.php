@@ -18,6 +18,7 @@ trait FileManagerTrait
      */
     protected function upload(string $dir, string $format, $image = null): string
     {
+        $format = 'png';  //remove when it is in live server
         $storage = config('filesystems.disks.default') ?? 'public';
 
         if (!is_null($image)) {

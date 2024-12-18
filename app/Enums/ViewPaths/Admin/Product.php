@@ -82,6 +82,10 @@ enum Product
         URI => 'stock-limit-status',
         VIEW => ''
     ];
+    const GET_PRICE_RANGE = [
+        URI => 'get-price-range',
+        VIEW => ''
+    ];
 
     const DELETE = [
         URI => 'delete',

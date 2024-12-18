@@ -70,6 +70,11 @@ enum Product
         VIEW => 'vendor-views.product.stock-limit-list'
     ];
 
+    const GET_PRICE_RANGE = [
+        URI => 'get-price-range',
+        VIEW => ''
+    ];
+
     const DELETE = [
         URI => 'delete',
         VIEW => ''

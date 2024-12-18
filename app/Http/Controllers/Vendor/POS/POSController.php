@@ -86,7 +86,7 @@ class POSController extends BaseController
         $categoryId = $request['category_id'];
         $categories = $this->categoryRepo->getListWhere(orderBy: ['id'=>'desc'],filters: ['position'=>0]);
         $searchValue = $request['searchValue'] ?? null;
-        $products = $this->productRepo->getListWhere(
+        $products = $this->productRepo->getPosListWhere(
             orderBy: ['id' => 'desc'],
             searchValue:$request['searchValue'],
             filters: [

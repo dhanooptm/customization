@@ -44,6 +44,11 @@ class EmailTemplateService
             EmailTemplateKey::ADD_FUND_TO_WALLET=>array('product_information','order_information','button_content','banner_image'),
             EmailTemplateKey::RESET_PASSWORD_VERIFICATION=>array('product_information','order_information','button_content','banner_image'),
 
+            //customization
+            EmailTemplateKey::ORDER_REQUEST=>array('icon','product_information','banner_image'),
+            EmailTemplateKey::CONTACT_SUPPLIER=>array('icon','product_information','banner_image'),
+            EmailTemplateKey::PRICE_REQUEST=>array('icon','product_information','banner_image'),
+
 
         ];
         return $hiddenData[$templateName];
@@ -105,6 +110,10 @@ class EmailTemplateService
             EmailTemplateKey::ORDER_RECEIVED=>'New Order Received',
             EmailTemplateKey::ADD_FUND_TO_WALLET=>'Transaction Successful',
             EmailTemplateKey::RESET_PASSWORD_VERIFICATION=>'OTP Verification For Password Reset',
+
+            EmailTemplateKey::ORDER_REQUEST=>'Order Request'.' # '.'{orderId}'.' Has Been Placed Successfully!',
+            EmailTemplateKey::CONTACT_SUPPLIER=>'Your Contact Inquiry Has been sent to supplier',
+            EmailTemplateKey::PRICE_REQUEST=>'Your price request Has been sent to supplier',
         ];
         return $titleData[$templateName];
     }
@@ -134,6 +143,10 @@ class EmailTemplateService
             EmailTemplateKey::ORDER_RECEIVED=> '<p><b>Hi '.$userType.',</b></p><p>We have sent you this email to notify that you have a new order.You will be able to see your orders after login to your panel.</p>',
             EmailTemplateKey::ADD_FUND_TO_WALLET=>'<div style="text-align: center; ">Amount successfully credited to your wallet .</div><div style="text-align: center; "><br></div>',
             EmailTemplateKey::RESET_PASSWORD_VERIFICATION=>'<p><b>Hi '.$userType.',</b></p><p>Your verification code is</p>',
+
+            EmailTemplateKey::ORDER_REQUEST=>'<p><b>Hi '.$userType.',</b></p><p>Your order request from {shopName} has been placed</p>',
+            EmailTemplateKey::CONTACT_SUPPLIER=>'<p><b>Hi '.$userType.',</b></p><p>Your contact inquiry from {shopName} has been sent</p>',
+            EmailTemplateKey::PRICE_REQUEST=>'<p><b>Hi '.$userType.',</b></p><p>Your price inquiry from {shopName} has been sent</p>',
         ];
         return $bodyData[$templateName];
     }

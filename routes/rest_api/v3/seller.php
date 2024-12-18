@@ -9,6 +9,7 @@ use App\Http\Controllers\RestAPI\v3\seller\EmergencyContactController;
 use App\Http\Controllers\RestAPI\v3\seller\OrderController;
 use App\Http\Controllers\RestAPI\v3\seller\POSController;
 use App\Http\Controllers\RestAPI\v3\seller\ProductController;
+use App\Http\Controllers\RestAPI\v3\seller\ProductInquiryController;
 use App\Http\Controllers\RestAPI\v3\seller\SellerController;
 use App\Http\Controllers\RestAPI\v3\seller\shippingController;
 use App\Http\Controllers\RestAPI\v3\seller\ShippingMethodController;
@@ -98,6 +99,12 @@ Route::group(['namespace' => 'RestAPI\v3\seller', 'prefix' => 'v3/seller', 'midd
         Route::group(['prefix' => 'orders'], function () {
             Route::controller(OrderController::class)->group(function () {
                 Route::get('list', 'list');
+                Route::get('order-request-list', 'order_request_list');
+                Route::get('inquiry-list', 'inquiry_list');
+                Route::get('price-request-list', 'price_request_list');
+                Route::post('order-request-status', 'order_request_status');
+                Route::post('inquiry-status', 'inquiry_status');
+                Route::post('price-request-status', 'price_request_status');
                 Route::get('/{id}', 'details');
                 Route::put('order-detail-status/{id}', 'order_detail_status');
                 Route::put('assign-delivery-man', 'assign_delivery_man');
@@ -107,6 +114,7 @@ Route::group(['namespace' => 'RestAPI\v3\seller', 'prefix' => 'v3/seller', 'midd
                 Route::post('update-payment-status', 'update_payment_status');
                 Route::post('address-update', 'address_update');
             });
+
         });
 
         Route::group(['prefix' => 'refund'], function () {

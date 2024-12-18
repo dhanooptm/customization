@@ -11,6 +11,7 @@ use App\Http\Controllers\RestAPI\v1\ProductController;
 use App\Http\Controllers\RestAPI\v1\SellerController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Customer\PaymentController;
+use App\Http\Controllers\RestAPI\v1\ProductInquiryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +25,10 @@ use App\Http\Controllers\Customer\PaymentController;
  */
 
 Route::group(['namespace' => 'RestAPI\v1', 'prefix' => 'v1', 'middleware' => ['api_lang']], function () {
+
+    Route::group(['prefix' => 'order'], function () {
+        Route::post('order-request', 'OrderController@place_order_request')->middleware('auth:api');
+    });
 
     Route::group(['prefix' => 'auth', 'namespace' => 'auth'], function () {
         Route::post('register', 'PassportAuthController@register');
@@ -115,6 +120,12 @@ Route::group(['namespace' => 'RestAPI\v1', 'prefix' => 'v1', 'middleware' => ['a
             Route::delete('review/delete-image', 'deleteReviewImage')->middleware('auth:api');
         });
     });
+    Route::group(['prefix' => 'products'], function () {
+        Route::controller(ProductInquiryController::class)->group(function () {
+            Route::post('product-inquiry', 'product_inquiry');
+            Route::post('product-price-inquiry', 'price_inquiry');
+        });
+    });
 
     Route::group(['middleware' => 'apiGuestCheck'], function () {
         Route::group(['prefix' => 'products'], function () {
@@ -177,6 +188,7 @@ Route::group(['namespace' => 'RestAPI\v1', 'prefix' => 'v1', 'middleware' => ['a
                     Route::get('place', 'place_order');
                     Route::get('offline-payment-method-list', 'offline_payment_method_list');
                     Route::post('place-by-offline-payment', 'placeOrderByOfflinePayment');
+                    Route::post('order-request', 'place_order_request')->middleware('auth:api');
                 });
                 Route::controller(CustomerController::class)->group(function () {
                     Route::get('details', 'get_order_details');
@@ -185,7 +197,9 @@ Route::group(['namespace' => 'RestAPI\v1', 'prefix' => 'v1', 'middleware' => ['a
             });
         });
     });
-
+    Route::group(['prefix' => 'customer/order', 'middleware' => 'auth:api'], function () {
+        Route::get('order-request-list', 'CustomerController@order_request_list');
+    });
     Route::group(['prefix' => 'customer', 'middleware' => 'auth:api'], function () {
         Route::get('info', 'CustomerController@info');
         Route::put('update-profile', 'CustomerController@update_profile');

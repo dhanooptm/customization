@@ -209,6 +209,7 @@ class ProductController extends Controller
             'tax_model' => 'required',
             'lang' => 'required',
             'unit_price' => 'required|min:1',
+            'price_type' => 'required|',
             'discount' => 'required|gt:-1',
             'shipping_cost' => 'required_if:product_type,==,physical|gt:-1',
             'code' => 'required|min:6|max:20|regex:/^[a-zA-Z0-9]+$/|unique:products',
@@ -224,6 +225,17 @@ class ProductController extends Controller
             'minimum_order_qty.required' => translate('The minimum order quantity is required!'),
             'minimum_order_qty.min' => translate('The minimum order quantity must be positive!'),
         ]);
+
+
+        if($request->price_type=="multiple_price"){
+
+            $productMultiPrice = json_decode($request->product_multi_price, true);
+             $response =  Helpers::multi_price_check($productMultiPrice,$request,true,true);
+             if(isset($response['error']) && $response['error'] == true){
+                return response()->json(['message' => $response['message']], 403);
+              }
+        }
+
 
         if (getWebConfig(name: 'product_brand') && empty($request['brand_id'])) {
             $validator->after(function ($validator) {
@@ -280,6 +292,8 @@ class ProductController extends Controller
             'color_image' => json_encode($requestColorImages),
             'thumbnail' => $request['thumbnail'],
             'thumbnail_storage_type' => $request['thumbnail'] ? $storage : null,
+            'price_type' => $request['price_type'],
+            'product_multi_price' =>  $request['price_type']=="multiple_price" ? $request['product_multi_price'] : '',
         ];
 
         if ($request['product_type'] == 'digital' && $request['digital_product_type'] == 'ready_product' && $request['digital_file_ready']) {
@@ -520,6 +534,8 @@ class ProductController extends Controller
             'minimum_order_qty.min' => 'The minimum order quantity must be positive!',
         ]);
 
+
+
         $brandSetting = BusinessSetting::where('type', 'product_brand')->first()->value;
         if ($brandSetting && empty($request->brand_id)) {
             $validator->after(function ($validator) {
@@ -528,6 +544,14 @@ class ProductController extends Controller
                 );
             });
         }
+
+        if($request->price_type=="multiple_price" && $request->product_multi_price){
+            $product=Product::where('id',$id)->first();
+            $productMultiPrice = $request->product_multi_price ? json_decode($request->product_multi_price, true) :json_decode($product->product_multi_price, true);
+            $productMultiPrice = json_decode($request->product_multi_price, true);
+              Helpers::multi_price_check($productMultiPrice,$request,false,true);
+        }
+
 
         if ($request['discount_type'] == 'percent') {
             $discount = ($request['unit_price'] / 100) * $request['discount'];
@@ -691,6 +715,12 @@ class ProductController extends Controller
         $product->discount_type = $request->discount_type;
         $product->attributes = $request->product_type == 'physical' ? json_encode($requestChoiceAttributes) : json_encode([]);
         $product->current_stock = $request->product_type == 'physical' ? $request->current_stock : 999999999;
+        $product->price_type = $request->price_type;
+        if($request->price_type == "multiple_price" && $request->product_multi_price){
+            $product->product_multi_price = $request->product_multi_price;
+        }
+
+
 
         $product->meta_title = '';
         $product->meta_description = '';

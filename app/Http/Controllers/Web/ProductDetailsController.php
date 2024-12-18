@@ -10,6 +10,7 @@ use App\Contracts\Repositories\ReviewRepositoryInterface;
 use App\Contracts\Repositories\SellerRepositoryInterface;
 use App\Contracts\Repositories\TagRepositoryInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Request;
 use App\Models\Product;
 use App\Models\ProductTag;
 use App\Models\Review;
@@ -41,9 +42,7 @@ class ProductDetailsController extends Controller
         private readonly ProductTagRepositoryInterface     $productTagRepo,
         private readonly TagRepositoryInterface            $tagRepo,
         private readonly SellerRepositoryInterface         $sellerRepo,
-    )
-    {
-    }
+    ) {}
 
     /**
      * @param string $slug
@@ -71,7 +70,8 @@ class ProductDetailsController extends Controller
                 orderBy: ['id' => 'desc'],
                 filters: ['product_id' => $product['id']],
                 relations: ['reply'],
-                dataLimit: 2, offset: 1
+                dataLimit: 2,
+                offset: 1
             );
 
             $rating = getRating(reviews: $product->reviews);
@@ -126,10 +126,29 @@ class ProductDetailsController extends Controller
             $inHouseVacationStatus = $product['added_by'] == 'admin' ? $inHouseVacation['status'] : false;
             $inHouseTemporaryClose = $product['added_by'] == 'admin' ? $temporaryClose['status'] : false;
 
-            return view(VIEW_FILE_NAMES['products_details'], compact('product', 'countWishlist', 'countOrder', 'relatedProducts',
-                'dealOfTheDay', 'currentDate', 'sellerVacationStartDate', 'sellerVacationEndDate', 'sellerTemporaryClose',
-                'inHouseVacationStartDate', 'inHouseVacationEndDate', 'inHouseVacationStatus', 'inHouseTemporaryClose', 'overallRating',
-                'wishlistStatus', 'productReviews', 'rating', 'totalReviews', 'productsForReview', 'moreProductFromSeller', 'decimalPointSettings'));
+            return view(VIEW_FILE_NAMES['products_details'], compact(
+                'product',
+                'countWishlist',
+                'countOrder',
+                'relatedProducts',
+                'dealOfTheDay',
+                'currentDate',
+                'sellerVacationStartDate',
+                'sellerVacationEndDate',
+                'sellerTemporaryClose',
+                'inHouseVacationStartDate',
+                'inHouseVacationEndDate',
+                'inHouseVacationStatus',
+                'inHouseTemporaryClose',
+                'overallRating',
+                'wishlistStatus',
+                'productReviews',
+                'rating',
+                'totalReviews',
+                'productsForReview',
+                'moreProductFromSeller',
+                'decimalPointSettings'
+            ));
         }
 
         Toastr::error(translate('not_found'));
@@ -198,7 +217,8 @@ class ProductDetailsController extends Controller
                 orderBy: ['id' => 'desc'],
                 filters: ['product_id' => $product['id']],
                 relations: ['reply'],
-                dataLimit: 2, offset: 1
+                dataLimit: 2,
+                offset: 1
             );
             $decimalPointSettings = getWebConfig('decimal_point_settings');
             $moreProductFromSeller = $this->productRepo->getWebListWithScope(
@@ -242,16 +262,36 @@ class ProductDetailsController extends Controller
 
             $positiveReview = $ratingCount != 0 ? ($vendorRattingStatusPositive * 100) / $ratingCount : 0;
 
-            return view(VIEW_FILE_NAMES['products_details'], compact('product', 'wishlistStatus', 'countWishlist',
-                'countOrder', 'relatedProducts', 'dealOfTheDay', 'currentDate', 'sellerVacationStartDate', 'sellerVacationEndDate',
-                'sellerTemporaryClose', 'inHouseVacationStartDate', 'inHouseVacationEndDate', 'inHouseVacationStatus', 'inHouseTemporaryClose',
-                'overallRating', 'decimalPointSettings', 'moreProductFromSeller', 'productsForReview', 'totalReviews', 'rating', 'productReviews',
-                'avgRating', 'compareList', 'positiveReview'));
+            return view(VIEW_FILE_NAMES['products_details'], compact(
+                'product',
+                'wishlistStatus',
+                'countWishlist',
+                'countOrder',
+                'relatedProducts',
+                'dealOfTheDay',
+                'currentDate',
+                'sellerVacationStartDate',
+                'sellerVacationEndDate',
+                'sellerTemporaryClose',
+                'inHouseVacationStartDate',
+                'inHouseVacationEndDate',
+                'inHouseVacationStatus',
+                'inHouseTemporaryClose',
+                'overallRating',
+                'decimalPointSettings',
+                'moreProductFromSeller',
+                'productsForReview',
+                'totalReviews',
+                'rating',
+                'productReviews',
+                'avgRating',
+                'compareList',
+                'positiveReview'
+            ));
         }
 
         Toastr::error(translate('not_found'));
         return back();
-
     }
 
     public function getThemeFashion($slug): View|RedirectResponse
@@ -306,7 +346,8 @@ class ProductDetailsController extends Controller
                 orderBy: ['id' => 'desc'],
                 filters: ['product_id' => $product['id']],
                 relations: ['reply'],
-                dataLimit: 2, offset: 1
+                dataLimit: 2,
+                offset: 1
             );
             $decimalPointSettings = getWebConfig('decimal_point_settings');
             $moreProductFromSeller = $this->productRepo->getWebListWithScope(
@@ -412,11 +453,37 @@ class ProductDetailsController extends Controller
                 offset: 1
             );
 
-            return view(VIEW_FILE_NAMES['products_details'], compact('product', 'wishlistStatus', 'countWishlist',
-                'relatedProducts', 'currentDate', 'sellerVacationStartDate', 'sellerVacationEndDate', 'rattingStatus', 'productsLatest',
-                'sellerTemporaryClose', 'inHouseVacationStartDate', 'inHouseVacationEndDate', 'inHouseVacationStatus', 'inHouseTemporaryClose', 'positiveReview',
-                'overallRating', 'decimalPointSettings', 'moreProductFromSeller', 'productsForReview', 'productsCount', 'totalReviews', 'rating', 'productReviews',
-                'avgRating', 'topRatedShops', 'newSellers', 'deliveryInfo', 'productsTopRated', 'productsThisStoreTopRated'));
+            return view(VIEW_FILE_NAMES['products_details'], compact(
+                'product',
+                'wishlistStatus',
+                'countWishlist',
+                'relatedProducts',
+                'currentDate',
+                'sellerVacationStartDate',
+                'sellerVacationEndDate',
+                'rattingStatus',
+                'productsLatest',
+                'sellerTemporaryClose',
+                'inHouseVacationStartDate',
+                'inHouseVacationEndDate',
+                'inHouseVacationStatus',
+                'inHouseTemporaryClose',
+                'positiveReview',
+                'overallRating',
+                'decimalPointSettings',
+                'moreProductFromSeller',
+                'productsForReview',
+                'productsCount',
+                'totalReviews',
+                'rating',
+                'productReviews',
+                'avgRating',
+                'topRatedShops',
+                'newSellers',
+                'deliveryInfo',
+                'productsTopRated',
+                'productsThisStoreTopRated'
+            ));
         }
 
         Toastr::error(translate('not_found'));
@@ -563,14 +630,223 @@ class ProductDetailsController extends Controller
 
             $products_latest = Product::active()->with(['reviews', 'rating'])->latest()->take(12)->get();
 
-            return view(VIEW_FILE_NAMES['products_details'], compact('product', 'wishlist_status', 'countWishlist',
-                'relatedProducts', 'current_date', 'seller_vacation_start_date', 'seller_vacation_end_date', 'ratting_status', 'products_latest',
-                'seller_temporary_close', 'inhouse_vacation_start_date', 'inhouse_vacation_end_date', 'inHouseVacationStatus', 'inhouseTemporaryClose',
-                'overall_rating', 'decimal_point_settings', 'more_product_from_seller', 'products_for_review', 'total_reviews', 'rating', 'reviews_of_product',
-                'avg_rating', 'rating_percentage', 'more_seller', 'new_seller', 'delivery_info', 'products_top_rated', 'products_this_store_top_rated', 'more_product_from_seller_count'));
+            return view(VIEW_FILE_NAMES['products_details'], compact(
+                'product',
+                'wishlist_status',
+                'countWishlist',
+                'relatedProducts',
+                'current_date',
+                'seller_vacation_start_date',
+                'seller_vacation_end_date',
+                'ratting_status',
+                'products_latest',
+                'seller_temporary_close',
+                'inhouse_vacation_start_date',
+                'inhouse_vacation_end_date',
+                'inHouseVacationStatus',
+                'inhouseTemporaryClose',
+                'overall_rating',
+                'decimal_point_settings',
+                'more_product_from_seller',
+                'products_for_review',
+                'total_reviews',
+                'rating',
+                'reviews_of_product',
+                'avg_rating',
+                'rating_percentage',
+                'more_seller',
+                'new_seller',
+                'delivery_info',
+                'products_top_rated',
+                'products_this_store_top_rated',
+                'more_product_from_seller_count'
+            ));
         }
 
         Toastr::error(translate('not_found'));
         return back();
+    }
+
+    public function multiple_price_product(Request $request)
+    {
+        $product = $this->productRepo->getFirstWhereActive(params: ['slug' => $request->product_id], relations: ['seoInfo', 'digitalVariation', 'reviews', 'seller.shop']);
+        if ($product) {
+            $overallRating = getOverallRating(reviews: $product->reviews);
+            $wishlistStatus = $this->wishlistRepo->getListWhereCount(filters: ['product_id' => $product['id'], 'customer_id' => auth('customer')->id()]);
+            $productReviews = $this->reviewRepo->getListWhere(
+                orderBy: ['id' => 'desc'],
+                filters: ['product_id' => $product['id']],
+                relations: ['reply'],
+                dataLimit: 2,
+                offset: 1
+            );
+
+            $rating = getRating(reviews: $product->reviews);
+            $decimalPointSettings = getWebConfig('decimal_point_settings');
+            $moreProductFromSeller = $this->productRepo->getWebListWithScope(
+                orderBy: ['id' => 'desc'],
+                scope: 'active',
+                filters: ['added_by' => $product['added_by'] == 'admin' ? 'in_house' : $product['added_by'], 'seller_id' => $product['user_id']],
+                whereNotIn: ['id' => [$product['id']]],
+                dataLimit: 5,
+                offset: 1
+            );
+
+            if ($product['added_by'] == 'seller') {
+                $productsForReview = $this->productRepo->getWebListWithScope(
+                    scope: 'active',
+                    filters: ['added_by' => $product['added_by'], 'seller_id' => $product['user_id']],
+                    withCount: ['reviews' => 'reviews']
+                );
+            } else {
+                $productsForReview = $this->productRepo->getWebListWithScope(
+                    scope: 'active',
+                    filters: ['added_by' => 'in_house', 'seller_id' => $product['user_id']],
+                    withCount: ['reviews' => 'reviews']
+                );
+            }
+
+            $totalReviews = 0;
+            foreach ($productsForReview as $item) {
+                $totalReviews += $item->reviews_count;
+            }
+            $countOrder = $this->orderDetailRepo->getListWhereCount(filters: ['product_id' => $product['id']]);
+            $countWishlist = $this->wishlistRepo->getListWhereCount(filters: ['product_id' => $product['id']]);
+            $relatedProducts = $this->productRepo->getWebListWithScope(
+                scope: 'active',
+                filters: ['category_id' => $product['category_id']],
+                whereNotIn: ['id' => [$product['id']]],
+                relations: ['reviews' => 'reviews'],
+                dataLimit: 12,
+                offset: 1
+            );
+            $dealOfTheDay = $this->dealOfTheDayRepo->getFirstWhere(['product_id' => $product['id'], 'status' => 1]);
+            $currentDate = date('Y-m-d');
+            $sellerVacationStartDate = ($product['added_by'] == 'seller' && isset($product->seller->shop->vacation_start_date)) ? date('Y-m-d', strtotime($product->seller->shop->vacation_start_date)) : null;
+            $sellerVacationEndDate = ($product['added_by'] == 'seller' && isset($product->seller->shop->vacation_end_date)) ? date('Y-m-d', strtotime($product->seller->shop->vacation_end_date)) : null;
+            $sellerTemporaryClose = ($product['added_by'] == 'seller' && isset($product->seller->shop->temporary_close)) ? $product->seller->shop->temporary_close : false;
+
+            $temporaryClose = getWebConfig('temporary_close');
+            $inHouseVacation = getWebConfig('vacation_add');
+            $inHouseVacationStartDate = $product['added_by'] == 'admin' ? $inHouseVacation['vacation_start_date'] : null;
+            $inHouseVacationEndDate = $product['added_by'] == 'admin' ? $inHouseVacation['vacation_end_date'] : null;
+            $inHouseVacationStatus = $product['added_by'] == 'admin' ? $inHouseVacation['status'] : false;
+            $inHouseTemporaryClose = $product['added_by'] == 'admin' ? $temporaryClose['status'] : false;
+
+            return view('web-views.products.price-details', compact(
+                'product',
+                'countWishlist',
+                'countOrder',
+                'relatedProducts',
+                'dealOfTheDay',
+                'currentDate',
+                'sellerVacationStartDate',
+                'sellerVacationEndDate',
+                'sellerTemporaryClose',
+                'inHouseVacationStartDate',
+                'inHouseVacationEndDate',
+                'inHouseVacationStatus',
+                'inHouseTemporaryClose',
+                'overallRating',
+                'wishlistStatus',
+                'productReviews',
+                'rating',
+                'totalReviews',
+                'productsForReview',
+                'moreProductFromSeller',
+                'decimalPointSettings'
+            ));
+        }
+
+        Toastr::error(translate('not_found'));
+        return back();
+    }
+    public function multi_price_update(Request $request)
+    {
+        $updated_quantity = 0;
+        $totalAmount = 0;
+        $errors = [];
+        $totalTax = 0;
+        $totalDiscount = 0;
+      if($request->product_id){
+        $updated_quantity = $request->quantity;
+        $product = Product::find($request->product_id);
+        if($request['quantity'] > $product['current_stock']){
+            $errors[] = "Quantity {$request['quantity']} is greater than stock";
+        }
+        $product_multi_price =  json_decode($product->product_multi_price,true);
+        $quantity = (int)$request['quantity'];
+        $priceToUse = null;
+        foreach ($product_multi_price as $range) {
+            $start = (int)$range['start_point'];
+            $end = $range['end_point'] !== null ? (int)$range['end_point'] : PHP_INT_MAX;
+
+            if ($quantity >= $start && $quantity <= $end) {
+                $priceToUse = (int)$range['price'];
+                break;
+            }
+
+            if ($range['endless'] && $quantity >= $start) {
+                $priceToUse = (int)$range['price'];
+                break;
+            }
+        }
+        if ($priceToUse !== null) {
+            $discount = Helpers::get_product_discount($product, $priceToUse);
+            $tax = 0;
+            if($product['tax_model'] == 'exclude'){
+                $tax = Helpers::tax_calculation(product: $product, price: $priceToUse, tax: $product['tax'], tax_type: $product['tax_type']);
+            }
+            $totalAmount += ($priceToUse * $quantity) - ($discount * $quantity) + ($tax * $quantity);
+            $totalDiscount +=  $discount * $quantity;
+            $totalTax +=  $tax * $quantity;
+        } else {
+            $errors[] = "Quantity {$quantity} for product '{$product->name}' is out of range.";
+        }
+
+      }else{
+        foreach($request->variants as $key => $variant){
+            if( $variant['quantity'] > 0){
+                if($variant['quantity'] > $variant['variant_stock']){
+                    $errors[] = "Quantity {$variant['quantity']} is greater than stock";
+                }
+              $product_id = $variant['cart_id'];
+              $variantPrice = $variant['variant_price'];
+
+              $product = Product::find($product_id);
+              $product_multi_price =  json_decode($product->product_multi_price,true);
+              $quantity = (int)$variant['quantity'];
+              $priceToUse = null;
+             foreach ($product_multi_price as $range) {
+                 $start = (int)$range['start_point'];
+                 $end = $range['end_point'] !== null ? (int)$range['end_point'] : PHP_INT_MAX;
+
+                 if ($quantity >= $start && $quantity <= $end) {
+                     $priceToUse = (int)$range['price'];
+                     break;
+                 }
+
+                 if ($range['endless'] && $quantity >= $start) {
+                     $priceToUse = (int)$range['price'];
+                     break;
+                 }
+             }
+             if ($priceToUse !== null) {
+              $discount = Helpers::get_product_discount($product, $priceToUse);
+              $tax = 0;
+              if($product['tax_model'] == 'exclude'){
+                  $tax = Helpers::tax_calculation(product: $product, price: $priceToUse, tax: $product['tax'], tax_type: $product['tax_type']);
+              }
+                 $totalAmount += ($priceToUse * $quantity) + $variantPrice - ($discount * $quantity) + ($tax * $quantity);
+                 $totalDiscount +=  $discount * $quantity;
+                 $totalTax +=  $tax * $quantity;
+             } else {
+                 $errors[] = "Quantity {$quantity} for variant type '{$variant['variant_type']}' is out of range.";
+             }
+            }
+
+          }
+      }
+        return response()->json(['totalDiscount' => Helpers::currency_converter($totalDiscount),'totalTax' => Helpers::currency_converter($totalTax),'totalAmount' => Helpers::currency_converter($totalAmount),'errors' => $errors,'updated_quantity' =>$updated_quantity]);
     }
 }

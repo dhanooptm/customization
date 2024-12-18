@@ -25,8 +25,11 @@ use App\Http\Controllers\BaseController;
 use App\Http\Requests\Admin\ProductDenyRequest;
 use App\Http\Requests\ProductAddRequest;
 use App\Http\Requests\ProductUpdateRequest;
+use App\Models\PriceRange;
+use App\Models\Product as ModelsProduct;
 use App\Services\ProductService;
 use App\Traits\FileManagerTrait;
+use App\Utils\Helpers;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -35,12 +38,14 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
+
 class ProductController extends BaseController
 {
     use FileManagerTrait {
         delete as deleteFile;
         update as updateFile;
     }
+
 
     public function __construct(
         private readonly CategoryRepositoryInterface                $categoryRepo,
@@ -91,6 +96,11 @@ class ProductController extends BaseController
 
     public function add(ProductAddRequest $request, ProductService $service): JsonResponse|RedirectResponse
     {
+         if($request->price_type=="multiple_price"){
+
+          $productMultiPrice = json_decode($request->product_multi_price, true);
+            Helpers::multi_price_check($productMultiPrice,$request,true);
+         }
         if ($request->ajax()) {
             return response()->json([], 200);
         }
@@ -107,7 +117,30 @@ class ProductController extends BaseController
         }
 
         $this->productSeoRepo->add(data: $service->getProductSEOData(request: $request, product: $savedProduct, action: 'add'));
+        // if($request['price_type'] == 'multiple_price'){
 
+
+        //     $startPoints = $request->input('start_point');
+        //     $endPoints = $request->input('end_point');
+        //     $prices = $request->input('price');
+        //     $isEndless = $request->input('is_endless', false);
+
+        //     // // Validate that the arrays have the same length
+        //     // if (count($startPoints) !== count($endPoints) || count($startPoints) !== count($prices)) {
+        //     //     return response()->json(['error' => 'Invalid input data'], 400);
+        //     // }
+
+        //     // Iterate over each set of values and save them
+        //     foreach ($startPoints as $index => $startPoint) {
+        //         $priceRange = new PriceRange();
+        //         $priceRange->product_id = $savedProduct->id;
+        //         $priceRange->start_point = $startPoint;
+        //         $priceRange->end_point = $endPoints[$index];
+        //         $priceRange->price = $prices[$index];
+        //         $priceRange->is_endless = $isEndless ? 1 : 0; // Handle endless logic if necessary
+        //         $priceRange->save();
+        //     }
+        // }
         Toastr::success(translate('product_added_successfully'));
         return redirect()->route('admin.products.list', ['in_house']);
     }
@@ -158,6 +191,13 @@ class ProductController extends BaseController
 
     public function update(ProductUpdateRequest $request, ProductService $service, string|int $id): JsonResponse|RedirectResponse
     {
+
+        if($request->price_type=="multiple_price"){
+            $product= ModelsProduct::where('id',$id)->first();
+            $productMultiPrice = $request->product_multi_price ? json_decode($request->product_multi_price, true) :json_decode($product->product_multi_price, true);
+              Helpers::multi_price_check($productMultiPrice,$request);
+           }
+
         if ($request->ajax()) {
             return response()->json([], 200);
         }
@@ -391,7 +431,7 @@ class ProductController extends BaseController
     public function exportList(Request $request, string $type): BinaryFileResponse
     {
         $filters = [
-            'added_by' => $type,
+            'added_by' => $type == 'in-house' ? 'in_house' : $type,
             'request_status' => $request['status'],
             'seller_id' => $request['seller_id'],
             'brand_id' => $request['brand_id'],
@@ -401,7 +441,6 @@ class ProductController extends BaseController
         ];
 
         $products = $this->productRepo->getListWhere(orderBy: ['id' => 'desc'], searchValue: $request['searchValue'], filters: $filters, dataLimit: 'all');
-
         //export from product
         $category = (!empty($request['category_id']) && $request->has('category_id')) ? $this->categoryRepo->getFirstWhere(params: ['id' => $request['category_id']]) : 'all';
         $subCategory = (!empty($request->sub_category_id) && $request->has('sub_category_id')) ? $this->categoryRepo->getFirstWhere(params: ['id' => $request['sub_category_id']]) : 'all';
@@ -674,5 +713,13 @@ class ProductController extends BaseController
         return response()->json([
             'result' => view(Product::MULTIPLE_PRODUCT_DETAILS[VIEW], compact('selectedProducts'))->render(),
         ]);
+    }
+
+    public function getPriceRange($id)
+    {
+        $selectedProducts = $this->productRepo->getFirstWhere(params: ['id' => $id]);
+
+         return Helpers::multi_price_format($selectedProducts->product_multi_price);
+
     }
 }

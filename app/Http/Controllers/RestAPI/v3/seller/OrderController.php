@@ -10,6 +10,9 @@ use App\Models\DeliverymanWallet;
 use App\Models\DeliveryZipCode;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\OrderRequest;
+use App\Models\ProductInquiry;
+use App\Models\ProductPriceInquiry;
 use App\Traits\CommonTrait;
 use App\Models\User;
 use App\Utils\BackEndHelper;
@@ -362,5 +365,101 @@ class OrderController extends Controller
         }
 
         return response()->json(['message' => 'Address updated successfully'], 200);
+    }
+    public function order_request_list(Request $request)
+    {
+        $seller = $request->seller;
+        $orders =  OrderRequest::with(['product','customer','seller'])
+            ->where('seller_id',$seller['id'])
+            ->latest()
+            ->paginate($request['limit'], ['*'], 'page', $request['offset']);
+
+        return response()->json([
+            'total_size' => $orders->total(),
+            'limit' => (int)$request['limit'],
+            'offset' => (int)$request['offset'],
+            'orders' => $orders->items()
+        ], 200);
+    }
+    public function inquiry_list(Request $request)
+    {
+        $seller = $request->seller;
+        $orders =  ProductInquiry::with(['product','user'])
+            ->where('seller_id',$seller['id'])
+            ->latest()
+            ->paginate($request['limit'], ['*'], 'page', $request['offset']);
+
+        return response()->json([
+            'total_size' => $orders->total(),
+            'limit' => (int)$request['limit'],
+            'offset' => (int)$request['offset'],
+            'orders' => $orders->items()
+        ], 200);
+    }
+    public function price_request_list(Request $request)
+    {
+        $seller = $request->seller;
+        $orders =  ProductPriceInquiry::with(['product','user'])
+            ->where('seller_id',$seller['id'])
+            ->latest()
+            ->paginate($request['limit'], ['*'], 'page', $request['offset']);
+
+        return response()->json([
+            'total_size' => $orders->total(),
+            'limit' => (int)$request['limit'],
+            'offset' => (int)$request['offset'],
+            'orders' => $orders->items()
+        ], 200);
+    }
+    public function order_request_status(Request $request){
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+            'status' => 'required',
+        ]);
+
+        if ($validator->errors()->count() > 0) {
+            return response()->json(['errors' => Helpers::error_processor($validator)]);
+        }
+        $seller = $request->seller;
+
+        $order = OrderRequest::where('seller_id',$seller['id'])->where('id',$request->id)->first();
+        $order->order_status = $request->status;
+        $order->save();
+        return response()->json(['message' => 'Order Request status updated successfully'], 200);
+
+    }
+    public function inquiry_status(Request $request){
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+            'status' => 'required',
+        ]);
+
+        if ($validator->errors()->count() > 0) {
+            return response()->json(['errors' => Helpers::error_processor($validator)]);
+        }
+        $seller = $request->seller;
+
+        $order = ProductInquiry::where('seller_id',$seller['id'])->where('id',$request->id)->first();
+        $order->status = $request->status;
+        $order->save();
+        return response()->json(['message' => 'Inquiry status updated successfully'], 200);
+
+    }
+    public function price_request_status(Request $request){
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+            'status' => 'required',
+        ]);
+
+        if ($validator->errors()->count() > 0) {
+            return response()->json(['errors' => Helpers::error_processor($validator)]);
+        }
+
+        $seller = $request->seller;
+        $order = ProductPriceInquiry::where('seller_id',$seller['id'])->where('id',$request->id)->first();
+        $order->status = $request->status;
+        $order->save();
+        return response()->json(['message' => 'Price Request status updated successfully'], 200);
+
     }
 }

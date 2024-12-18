@@ -263,6 +263,7 @@ class POSController extends Controller
                 }
             })
             ->orderBy('id', 'DESC')
+            ->where('price_type','single_price')
             ->paginate($request['limit'], ['*'], 'page', $request['offset']);
 
         $products_final = Helpers::product_data_formatting($products, true);

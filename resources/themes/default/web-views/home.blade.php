@@ -21,7 +21,7 @@
 @section('content')
     <div class="__inline-61">
         @php($decimalPointSettings = !empty(getWebConfig(name: 'decimal_point_settings')) ? getWebConfig(name: 'decimal_point_settings') : 0)
-        
+
                 @include('web-views.partials._home-top-slider',['main_banner'=>$main_banner])
 
         @if ($flashDeal['flashDeal'] && $flashDeal['flashDealProducts'])
@@ -217,6 +217,100 @@
     </div>
 
     <span id="direction-from-session" data-value="{{ session()->get('direction') }}"></span>
+    {{-- <div class="modal fade" id="contact_supplier" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">{{ $product->name }}</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body priceless-modal">
+              <form method="post" action="{{ route('product-inquiry') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="form-group">
+                    <input type="hidden" class="form-control" name="product_id" id="product_id" value="{{ $product->id }}">
+                  <label for="name" class="col-form-label"><strong>{{ translate('quantity') }}</strong></label>
+                  <input type="number" class="form-control" min="1" id="quantity" name="quantity" required placeholder="{{translate('total_Quantity')}}">
+                </div>
+                <div class="form-group">
+                  <label for="message-text" class="col-form-label"><strong>{{ translate('descriptions') }}</strong></label>
+                  <textarea class="form-control" id="descriptions" name="descriptions" placeholder="{{ translate('Describe_your_sourcing_requirments_for_products') }}" required></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="name" class="col-form-label"><strong>{{ translate('name') }}</strong></label>
+                  <input type="text" class="form-control" id="name" name="name" required placeholder="{{translate('your_Name')}}">
+                </div>
+                <div class="form-group">
+                    <label for="name" class="col-form-label"><strong>{{ translate('email') }}</strong></label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="{{translate('your_E_-_mail')}}" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="name" class="col-form-label"><strong>{{ translate('phone') }}</strong></label>
+                    <input type="text" class="form-control" id="phone" name="phone" placeholder="{{translate('contact_Number')}}" required>
+                  </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn--primary element-center btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}}">Send Enquiry</button>
+                  </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <div class="modal fade" id="request_price" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">{{ $product->name }}</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body priceless-modal">
+              <form method="post" action="{{ route('product-price-inquiry') }}" enctype="multipart/form-data">
+                @csrf
+               <input type="hidden" class="form-control" name="product_id" id="product_id" value="{{ $product->id }}">
+                <div class="form-group">
+                  <label for="message-text" class="col-form-label"><strong>{{ translate('descriptions') }}</strong></label>
+                  <textarea class="form-control" id="descriptions" name="descriptions" placeholder="{{ translate('Describe_your_sourcing_requirments_for_products') }}" required></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="name" class="col-form-label"><strong>{{ translate('name') }}</strong></label>
+                  <input type="text" class="form-control" id="name" name="name" required placeholder="{{translate('your_Name')}}">
+                </div>
+                <div class="form-group">
+                    <label for="name" class="col-form-label">{{ translate('company') }}</label>
+                    <input type="text" class="form-control" id="company" name="company" required placeholder="{{translate('your_Company')}}">
+                  </div>
+                <div class="form-group">
+                    <label for="name" class="col-form-label"><strong>{{ translate('email') }}</strong></label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="{{translate('your_E_-_mail')}}" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="name" class="col-form-label"><strong>{{ translate('pin') }}</strong></label>
+                    <input type="text" class="form-control" id="pin" name="pin" placeholder="{{translate('PIN')}}" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="name" class="col-form-label"><strong>{{ translate('phone') }}</strong></label>
+                    <input type="text" class="form-control" id="phone" name="phone" placeholder="{{translate('contact_Number')}}" required>
+                  </div>
+                        <input type="checkbox" name="is_dealer" class="endless" />
+                        <label class="endless-label mt-6"><strong>{{ translate('i_am_a_dealer') }}</strong></label>
+                        <br>
+                        <input type="checkbox" name="similar_info" class="endless" />
+                        <label class="endless-label mt-6"><strong>{{ translate('receive_offers_for_similar_products') }}</strong></label>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn--primary element-center btn-gap-{{Session::get('direction') === "rtl" ? 'left' : 'right'}}">Send Enquiry</button>
+                  </div>
+              </form>
+            </div>
+
+          </div>
+        </div> --}}
+      </div>
 @endsection
 
 @push('script')

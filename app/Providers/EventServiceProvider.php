@@ -13,7 +13,10 @@ use App\Events\EmailVerificationEvent;
 use App\Events\OrderPlacedEvent;
 use App\Events\PasswordResetEvent;
 use App\Events\ChattingEvent;
+use App\Events\ContactSupplierEvent;
+use App\Events\OrderRequestEvent;
 use App\Events\OrderStatusEvent;
+use App\Events\PriceRequestEvent;
 use App\Events\ProductRequestStatusUpdateEvent;
 use App\Events\RefundEvent;
 use App\Events\VendorRegistrationEvent;
@@ -29,7 +32,10 @@ use App\Listeners\EmailVerificationListener;
 use App\Listeners\OrderPlacedListener;
 use App\Listeners\PasswordResetListener;
 use App\Listeners\ChattingListener;
+use App\Listeners\ContactSupplierListener;
+use App\Listeners\OrderRequestListener;
 use App\Listeners\OrderStatusListener;
+use App\Listeners\PriceRequestListener;
 use App\Listeners\ProductRequestStatusUpdateListener;
 use App\Listeners\RefundListener;
 use App\Listeners\VendorRegistrationListener;
@@ -91,6 +97,15 @@ class EventServiceProvider extends ServiceProvider
         ],
         DigitalProductDownloadEvent::class => [
             DigitalProductDownloadListener::class,
+        ],
+        OrderRequestEvent::class => [
+            OrderRequestListener::class,
+        ],
+        ContactSupplierEvent::class => [
+            ContactSupplierListener::class,
+        ],
+        PriceRequestEvent::class => [
+            PriceRequestListener::class,
         ],
     ];
 

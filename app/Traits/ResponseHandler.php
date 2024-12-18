@@ -21,5 +21,10 @@ trait ResponseHandler
         }
         return $errors;
     }
+    public function multiPriceErrorProcessor($validator): array
+    {
+        $errors[] = ['error_code' => 'multi_price', 'message' => $validator];
+        return $errors;
+    }
 
 }

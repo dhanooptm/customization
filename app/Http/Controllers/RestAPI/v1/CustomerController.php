@@ -9,6 +9,7 @@ use App\Models\DeliveryZipCode;
 use App\Models\GuestUser;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\OrderRequest;
 use App\Models\Review;
 use App\Models\ShippingAddress;
 use App\Models\SupportTicket;
@@ -585,5 +586,18 @@ class CustomerController extends Controller
         $user->save();
 
         return response()->json(['message' => 'Successfully change'], 200);
+    }
+    public function order_request_list(Request $request)
+    {
+        $orders = OrderRequest::with(['product'])->where('customer_id',$request->user()->id)
+            ->orderBy('id', 'desc')
+            ->paginate($request['limit'], ['*'], 'page', $request['offset']);
+        $orders = [
+            'total_size' => $orders->total(),
+            'limit' => $request['limit'],
+            'offset' => $request['offset'],
+            'orders' => $orders->items()
+        ];
+        return response()->json($orders, 200);
     }
 }

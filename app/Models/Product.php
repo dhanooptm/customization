@@ -107,6 +107,8 @@ class Product extends Model
         'digital_file_ready_storage_type',
         'is_shipping_cost_updated',
         'temp_shipping_cost',
+        'price_type',
+        'product_multi_price',
     ];
 
     /**
@@ -159,6 +161,7 @@ class Product extends Model
         'digital_product_extensions' => 'array',
         'thumbnail_storage_type'=>'string',
         'digital_file_ready_storage_type'=>'string',
+        'price_type'=>'string',
     ];
 
     protected $appends = ['is_shop_temporary_close', 'thumbnail_full_url', 'color_images_full_url', 'meta_image_full_url', 'images_full_url', 'digital_file_ready_full_url'];
@@ -170,29 +173,35 @@ class Product extends Model
 
     public function scopeActive($query)
     {
-        $brandSetting = getWebConfig(name: 'product_brand');
-        $digitalProductSetting = getWebConfig(name: 'digital_product');
-        $businessMode = getWebConfig(name: 'business_mode');
+        // $brandSetting = getWebConfig(name: 'product_brand');
+        // $digitalProductSetting = getWebConfig(name: 'digital_product');
+		// $businessMode = getWebConfig(name: 'business_mode');
 
-        if (!$digitalProductSetting) {
+		$brandSetting = Cache::get('product_brand_config') ?? 'active';
+        $digitalProductSetting = Cache::get('digital_product_config') ?? 'active';
+        $businessMode = Cache::get('business_mode_config') ?? 'multi';
+
+        if ($digitalProductSetting != 'active') {
             $productType = ['physical'];
         } else {
             $productType = ['digital', 'physical'];
         }
 
-        return $query->when($businessMode == 'single', function ($query) {
+		return $query->when($businessMode == 'single', function ($query) {
             $query->where(['added_by' => 'admin']);
-        })->when($brandSetting, function ($query) {
+        })
+		->when($brandSetting == 'active', function ($query) {
             $query->whereHas('brand', function ($query) {
                 $query->where(['status' => 1]);
             });
-        })->when(!$brandSetting, function ($query) {
+        })
+		->when($brandSetting != 'active', function ($query) {
             $query->whereNull('brand_id')->where('status', 1);
         })
-            ->where(['status' => 1])
-            ->where(['request_status' => 1])
-            ->SellerApproved()
-            ->whereIn('product_type', $productType);
+			->where(['status' => 1])
+			->where(['request_status' => 1])
+			->SellerApproved()
+			->whereIn('product_type', $productType);
     }
 
     public function scopeSellerApproved($query): void
@@ -331,7 +340,10 @@ class Product extends Model
     {
         return $this->hasMany(ProductCompare::class);
     }
-
+    public function ranges(): HasMany
+    {
+        return $this->hasMany(PriceRange::class,'product_id');
+    }
     public function getNameAttribute($name): string|null
     {
         if (strpos(url()->current(), '/admin') || strpos(url()->current(), '/vendor') || strpos(url()->current(), '/seller')) {

@@ -24,10 +24,12 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
-
+use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Traits\ResponseHandler;
 class Helpers
 {
     use CommonTrait;
+    use  ResponseHandler;
     public static function status($id)
     {
         if ($id == 1) {
@@ -1059,6 +1061,137 @@ class Helpers
             return generate_referer_code();
         }
         return $ref_code;
+    }
+
+    public static function multi_price_check($productMultiPrice,$request,$store = false,$apiRequest = false){
+        // dd($request->discount_type,$request->discount,$productMultiPrice);
+        if ($apiRequest) {
+            $data['error'] = false;
+            $data['message'] = 'message';
+            if (is_array($productMultiPrice)) {
+                $previousEndPoint = null;
+
+                //flat discount check for price
+                if($request->discount_type == "flat"){
+                    $discount = $request->discount;
+                    if(isset($productMultiPrice) && count($productMultiPrice) > 0) {
+                     $prices = array_column($productMultiPrice, 'price');
+                     $check = array_filter($prices, function($price) use ($discount) {
+                         return $price <= $discount;
+                     });
+                     if (!empty($check)) {
+                        $data['error'] = true;
+                        $data['message'] = translate('discount_is_greater_than_price');
+                        return $data;
+                     }
+                 }
+                }
+
+                foreach ($productMultiPrice as $multi_price) {
+                    if (!$multi_price['start_point']) {
+                        $data['error'] = true;
+                        $data['message'] = translate("Invalid price range data : start point can't be null");
+                        break;
+                    }
+                    if (!$multi_price['end_point'] && $multi_price['endless'] == false) {
+                        $data['error'] = true;
+                        $data['message'] = translate("Invalid price range data : end point can't be null");
+                        break;
+                    }
+                    if ($multi_price['start_point'] > $multi_price['end_point'] && $multi_price['endless'] == false) {
+                        $data['error'] = true;
+                        $data['message'] = translate("Invalid price range data : end point can't be lower than start point");
+                        break;
+                    }
+                    if (!$multi_price['price']) {
+                        $data['error'] = true;
+                        $data['message'] = translate("Invalid price range data : price can't be null");
+                        break;
+                    }
+                    if ($previousEndPoint !== null && $multi_price['start_point'] < $previousEndPoint) {
+                        $data['error'] = true;
+                        $data['message'] = translate("Invalid price range data : start point {$multi_price['start_point']} is less than previous end point {$previousEndPoint}");
+                        break;
+                    }
+                    if($data['error'] == true){
+                        return $data;
+                    }
+
+                    // Update the previousEndPoint for the next iteration
+                    $previousEndPoint = $multi_price['end_point'];
+                }
+            } else {
+                //check only when product is added
+               if($store == true){
+                $data['error'] = true;
+                $data['message'] = translate("Invalid data format for product_multi_price");
+                if($data['error'] == true){
+                    return $data;
+                }
+               }
+            }
+        }else{
+            if (is_array($productMultiPrice)) {
+                $previousEndPoint = null;
+
+                //flat discount check for price
+                if($request->discount_type == "flat"){
+                    $discount = $request->discount;
+                    if(isset($productMultiPrice) && count($productMultiPrice) > 0) {
+                    $prices = array_column($productMultiPrice, 'price');
+                    $check = array_filter($prices, function($price) use ($discount) {
+                        return $price <= $discount;
+                    });
+                    if (!empty($check)) {
+                        throw new HttpResponseException(response()->json(['errors' => (new Helpers)->multiPriceErrorProcessor(translate('discount_is_greater_than_price'))]));
+                    }
+                }
+                }
+
+                foreach ($productMultiPrice as $multi_price) {
+
+                    if(!$multi_price['start_point']){
+                        throw new HttpResponseException(response()->json(['errors' => (new Helpers)->multiPriceErrorProcessor("Invalid price range data : start point can't be null")]));
+                    }
+                    if(!$multi_price['end_point'] && $multi_price['endless']==false){
+                        throw new HttpResponseException(response()->json(['errors' => (new Helpers)->multiPriceErrorProcessor("Invalid price range data : end point can't be null")]));
+                    }
+                    if($multi_price['start_point'] > $multi_price['end_point'] && $multi_price['endless']==false){
+                        throw new HttpResponseException(response()->json(['errors' => (new Helpers)->multiPriceErrorProcessor("Invalid price range data : end point can't be lower then start point")]));
+                    }
+                    if(!$multi_price['price']){
+                        throw new HttpResponseException(response()->json(['errors' => (new Helpers)->multiPriceErrorProcessor("Invalid price range data : price can't be null")]));
+                    }
+
+                    if ($previousEndPoint !== null && $multi_price['start_point'] < $previousEndPoint) {
+
+                        throw new HttpResponseException(response()->json(['errors' => (new Helpers)->multiPriceErrorProcessor("Invalid price range data : start point {$multi_price['start_point']} is less than previous end point {$previousEndPoint}")]));
+                    }
+
+                    $previousEndPoint = $multi_price['end_point'];
+                }
+            } else {
+                if($store == true){
+                    throw new HttpResponseException(response()->json(['errors' => (new Helpers)->multiPriceErrorProcessor("Invalid data format for product_multi_price")]));
+                }
+            }
+       }
+    }
+
+    public static function multi_price_format($productMultiPrice){
+        $arrayData = json_decode($productMultiPrice, true);
+
+
+        $data = array_map(function($item) {
+            return [
+                "start_point" => (int)$item["start_point"],
+                "end_point" => (int)$item["end_point"],
+                "price" => (int)$item["price"],
+                "endless" => $item["endless"]
+            ];
+        }, $arrayData);
+
+        return  $data;
     }
 
     public static function add_fund_to_wallet_bonus($amount)

@@ -15,6 +15,7 @@ use App\Models\DeliveryMan;
 use App\Models\DeliveryZipCode;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\OrderRequest;
 use App\Models\Product;
 use App\Models\ProductCompare;
 use App\Models\RefundRequest;
@@ -913,5 +914,30 @@ class UserProfileController extends Controller
             ->paginate(8);
 
         return view(VIEW_FILE_NAMES['user_coupons'], compact('coupons'));
+    }
+    public function account_order_request(Request $request)
+    {
+        $order_by = $request->order_by ?? 'desc';
+
+                 $orders = OrderRequest::where(['customer_id' => auth('customer')->id()])
+                ->orderBy('id', $order_by)
+                ->paginate(10);
+
+        return view(VIEW_FILE_NAMES['account_orders_requests'], compact('orders', 'order_by'));
+    }
+
+    public function account_order_details_request(Request $request): View|RedirectResponse
+    {
+        $order = OrderRequest::where(['id' => $request['id'], 'customer_id' => auth('customer')->id()])
+            ->first();
+
+        if ($order) {
+            return view(VIEW_FILE_NAMES['account_order_details_request'], [
+                'order' => $order,
+            ]);
+        }
+
+        Toastr::warning(translate('invalid_order'));
+        return redirect()->route('account-oder');
     }
 }

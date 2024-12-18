@@ -51,9 +51,11 @@ use App\Http\Controllers\Vendor\SystemController;
 use App\Http\Controllers\Vendor\WithdrawController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Vendor\Order\OrderController;
+use App\Http\Controllers\Vendor\Order\OrderRequestController;
 use App\Http\Controllers\Vendor\TransactionReportController;
 use App\Http\Controllers\Vendor\ProductReportController;
 use App\Http\Controllers\Vendor\OrderReportController;
+use App\Http\Controllers\Vendor\ProductInquiryController;
 
 Route::group(['prefix' => 'vendor', 'as' => 'vendor.'], function () {
     /* authentication */
@@ -153,7 +155,21 @@ Route::group(['prefix' => 'vendor', 'as' => 'vendor.'], function () {
                 Route::get(Product::SEARCH[URI], 'getSearchedProductsView')->name('search-product');
                 Route::get(Product::PRODUCT_GALLERY[URI], 'getProductGalleryView')->name('product-gallery');
                 Route::get(Product::STOCK_LIMIT_STATUS[URI], 'getStockLimitStatus')->name('stock-limit-status');
+                Route::get(Product::GET_PRICE_RANGE[URI].'/{id}' , 'getPriceRange')->name('get-price-range');
             });
+
+            Route::group(['prefix' => 'inquiry', 'as' => 'inquiry.'], function () {
+                Route::get('list', [ProductInquiryController::class, 'list'])->name('list');
+                Route::post('status-update', [ProductInquiryController::class, 'status_update'])->name('status-update');
+                Route::get('view/{id}', [ProductInquiryController::class, 'view'])->name('view');
+                Route::delete('delete/{id}', [ProductInquiryController::class, 'destroy'])->name('delete');
+
+                Route::get('request-list', [ProductInquiryController::class, 'request_list'])->name('request-list');
+                Route::post('price-status-update', [ProductInquiryController::class, 'price_status_update'])->name('price-status-update');
+                Route::get('view/{id}', [ProductInquiryController::class, 'view'])->name('view');
+                Route::delete('price-delete/{id}', [ProductInquiryController::class, 'price_destroy'])->name('price-delete');
+            });
+
         });
         Route::group(['prefix' => 'orders', 'as' => 'orders.'], function () {
             Route::controller(OrderController::class)->group(function () {
@@ -172,6 +188,18 @@ Route::group(['prefix' => 'vendor', 'as' => 'vendor.'], function () {
 
             });
         }); //end order
+        Route::group(['prefix' => 'orders', 'as' => 'orders.'], function () {
+            Route::group(['prefix' => 'order-request', 'as' => 'order-request.'], function () {
+                Route::controller(OrderRequestController::class)->group(function () {
+                    Route::get('list', 'index')->name('list');
+                    Route::get('details/{id}', 'details')->name('details');
+                    Route::get('export/{status}', 'exportList')->name('export-excel');
+                    Route::get('generate-invoice/{id}', 'generate_invoice')->name('generate-invoice');
+                    Route::post('read-status', 'updateReadStatus')->name('read-status');
+
+                });
+            });
+        });
 
         Route::group(['prefix' => 'customer', 'as' => 'customer.'], function () {
             Route::controller(CustomerController::class)->group(function () {

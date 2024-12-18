@@ -12,7 +12,7 @@
 <header class="rtl __inline-10">
     <div class="topbar">
         <div class="container">
-
+            @if(auth('customer')->check())
             <div>
                 <div class="topbar-text dropdown d-md-none ms-auto">
                     <a class="topbar-link direction-ltr" href="tel: {{$web_config['phone']->value}}">
@@ -25,6 +25,20 @@
                     </a>
                 </div>
             </div>
+            @else
+            <div>
+                <div class="topbar-text dropdown d-md-none ms-auto">
+                    <a class="topbar-link direction-ltr" href="{{route('customer.auth.login')}}">
+                        <i class="fa fa-phone"></i> {{translate('contact_our_Support_Team')}}
+                    </a>
+                </div>
+                <div class="d-none d-md-block mr-2 text-nowrap">
+                    <a class="topbar-link d-none d-md-inline-block direction-ltr" href="{{route('customer.auth.login')}}">
+                        <i class="fa fa-phone"></i> {{translate('contact_our_Support_Team')}}
+                    </a>
+                </div>
+            </div>
+            @endif
 
             <div>
                 @php($currency_model = getWebConfig(name: 'currency_model'))
@@ -166,6 +180,8 @@
                                  aria-labelledby="dropdownMenuButton">
                                 <a class="dropdown-item"
                                    href="{{route('account-oder')}}"> {{ translate('my_Order')}} </a>
+                                   <a class="dropdown-item"
+                                   href="{{route('account-request-order')}}"> {{ translate('my_Order_Request')}} </a>
                                 <a class="dropdown-item"
                                    href="{{route('user-account')}}"> {{ translate('my_Profile')}}</a>
                                 <div class="dropdown-divider"></div>

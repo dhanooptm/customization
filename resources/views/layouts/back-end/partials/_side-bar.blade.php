@@ -257,7 +257,33 @@
                                     </li>
                                 </ul>
                             </li>
+                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/orders/order-request*')?'active':''}}">
+                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle"
+                                   href="javascript:" title="{{translate('order_request')}}">
+                                    <i class="tio-shopping-cart-outlined nav-icon"></i>
+                                    <span
+                                        class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('order_request')}}</span>
+                                </a>
+                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                                    style="display: {{Request::is('admin/orders/order-request*')?'block':'none'}}">
+                                    {{-- <li class="nav-item {{Request::is('admin/products/range/range-add')?'active':''}}"
+                                        title="{{translate('add_new')}}">
+                                        <a class="nav-link " href="{{route('admin.products.range.range-add')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">{{translate('add_new')}}</span>
+                                        </a>
+                                    </li> --}}
+                                    <li class="nav-item {{Request::is('admin/orders/order-request/list')?'active':''}}"
+                                        title="{{translate('list')}}">
+                                        <a class="nav-link " href="{{route('admin.orders.order-request.list')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">{{translate('list')}}</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
                         @endif
+
                         @if(Helpers::module_permission_check('product_management'))
                             <li class="nav-item {{(Request::is('admin/brand*') || Request::is('admin/category*') || Request::is('admin/sub*') || Request::is('admin/attribute*') || Request::is('admin/products*'))?'scroll-here':''}}">
                                 <small class="nav-subtitle"
@@ -439,6 +465,65 @@
                                     <span
                                         class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('product_gallery')}}</span>
                                 </a>
+                            </li>
+
+                            {{-- <li class="navbar-vertical-aside-has-menu {{Request::is('admin/products/range*')?'active':''}}">
+                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle"
+                                   href="javascript:" title="{{translate('product_price_range')}}">
+                                    <i class="tio-star nav-icon"></i>
+                                    <span
+                                        class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('product_price_range')}}</span>
+                                </a>
+                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                                    style="display: {{Request::is('admin/products/range*')?'block':'none'}}">
+                                    <li class="nav-item {{Request::is('admin/products/range/range-add')?'active':''}}"
+                                        title="{{translate('add_new')}}">
+                                        <a class="nav-link " href="{{route('admin.products.range.range-add')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">{{translate('add_new')}}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item {{Request::is('admin/products/range/range-list')?'active':''}}"
+                                        title="{{translate('list')}}">
+                                        <a class="nav-link " href="{{route('admin.products.range.range-list')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">{{translate('list')}}</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li> --}}
+
+                             <li class="navbar-vertical-aside-has-menu {{Request::is('admin/products/inquiry*')?'active':''}}">
+                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle"
+                                   href="javascript:" title="{{translate('product_price_inquiry')}}">
+                                    <i class="tio-star nav-icon"></i>
+                                    <span
+                                        class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('product_price_inquiry')}}</span>
+                                </a>
+                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                                    style="display: {{Request::is('admin/products/inquiry*')?'block':'none'}}">
+                                    {{-- <li class="nav-item {{Request::is('admin/products/range/range-add')?'active':''}}"
+                                        title="{{translate('add_new')}}">
+                                        <a class="nav-link " href="{{route('admin.products.range.range-add')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">{{translate('add_new')}}</span>
+                                        </a>
+                                    </li> --}}
+                                    <li class="nav-item {{Request::is('admin/products/inquiry/list')?'active':''}}"
+                                        title="{{translate('list')}}">
+                                        <a class="nav-link " href="{{route('admin.products.inquiry.list')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">{{translate('list')}}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item {{Request::is('admin/products/inquiry/request-list')?'active':''}}"
+                                    title="{{translate('list')}}">
+                                    <a class="nav-link " href="{{route('admin.products.inquiry.request-list')}}">
+                                        <span class="tio-circle nav-indicator-icon"></span>
+                                        <span class="text-truncate">{{translate('request_price')}}</span>
+                                    </a>
+                                </li>
+                                </ul>
                             </li>
                         @endif
 

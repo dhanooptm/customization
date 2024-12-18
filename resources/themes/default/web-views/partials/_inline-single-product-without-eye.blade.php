@@ -54,17 +54,63 @@
                 </a>
             </div>
             <div class="justify-content-between text-center">
-                <div class="product-price text-center d-flex flex-wrap justify-content-center align-items-center gap-8">
-                    @if($product->discount > 0)
-                        <del class="category-single-product-price">
-                            {{ webCurrencyConverter(amount: $product->unit_price) }}
-                        </del>
+                <div class="text-center d-flex flex-wrap justify-content-center align-items-center gap-8">
+                    @if ($product->price_type == "single_price")
+                    <div class="justify-content-between text-center">
+                        <div class="product-price text-center d-flex flex-wrap justify-content-center align-items-center gap-8">
+                            @if($product->discount > 0)
+                                <del class="category-single-product-price">
+                                    {{ webCurrencyConverter(amount: $product->unit_price) }}
+                                </del>
+                                <br>
+                            @endif
+                            <span class="text-accent text-dark flex-wrap">
+                                {{ webCurrencyConverter(amount:
+                                    $product->unit_price-(getProductDiscount(product: $product, price: $product->unit_price))
+                                ) }}
+                            </span>
+                        </div>
+                       <span class="text-center flex-wrap">
+                        {{ translate('Min. order:') }}  {{ $product->minimum_order_qty .' ' . $product->unit }}
+                     </span>
+                    </div>
                     @endif
-                    <span class="text-accent text-dark">
-                        {{ webCurrencyConverter(amount:
-                            $product->unit_price-(getProductDiscount(product: $product, price: $product->unit_price))
-                        ) }}
+                    @if ($product->price_type == "multiple_price" && json_decode($product->product_multi_price,true))
+                    @php($product_multi_price = json_decode($product->product_multi_price,true))
+                    <div class="justify-content-between text-center">
+                        <div class="text-center d-flex flex-wrap justify-content-center align-items-center gap-8">
+                            <span class="flex-wrap" style="font-size: 15px;">{{ translate('starting_from :') }}</span>
+                            @if($product->discount > 0)
+                            <del class="category-single-product-price">
+                                {{ webCurrencyConverter(amount: $product_multi_price[0]['price']) }}
+                            </del>
+                            <br>
+                            @endif
+                            <span class="text-accent text-dark flex-wrap">
+                                {{ webCurrencyConverter(amount:
+                                    $product_multi_price[0]['price']-(getProductDiscount(product: $product, price: $product_multi_price[0]['price']))
+                                ) }}
+                            </span>
+                        </div>
+                        <span class="text-center flex-wrap">
+                            {{ translate('Min. order:') }}  {{ $product->minimum_order_qty .' ' . $product->unit }}
+                         </span>
+                    </div>
+                    @endif
+                    @if ($product->price_type == 'priceless')
+                    <div class="justify-content-between text-center">
+                    {{-- <button id="requestPriceButtonFeatureProduct-{{ $product->id }}" class="text-center btn btn--primary btn-sm">
+                        Price Request
+                    </button> --}}
+                    <span class="text-center flex-wrap">
+                        {{ translate('Price Request') }}
                     </span>
+                    <br>
+                        <span class="text-center flex-wrap">
+                            {{ translate('Min. order:') }} {{ $product->minimum_order_qty . ' ' . $product->unit }}
+                        </span>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

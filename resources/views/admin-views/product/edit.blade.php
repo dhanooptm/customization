@@ -147,6 +147,17 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="col-md-6 col-lg-4 col-xl-3">
+                            <div class="form-group">
+                                <label class="title-color">{{ translate('price_type') }}</label>
+                                <select name="price_type" id="price_type" class="form-control" required>
+                                    <option value="single_price" {{ $product->price_type=='single_price' ? 'selected' : ''}}>{{ translate('single_price') }}</option>
+                                    <option value="multiple_price" {{ $product->price_type=='multiple_price' ? 'selected' : ''}}>{{ translate('multiple_price') }}</option>
+                                    <option value="priceless" {{ $product->price_type=='priceless' ? 'selected' : ''}}>{{ translate('nonvisible') }}</option>
+
+                                </select>
+                            </div>
+                        </div>
                         <div class="col-md-6 col-lg-4 col-xl-3" id="digital_product_type_show">
                             <div class="form-group">
                                 <label for="digital_product_type"
@@ -219,6 +230,43 @@
                     </div>
                 </div>
             </div>
+
+
+@if($product->price_type=="multiple_price")
+<div id="price_range_box" class="card mt-3" >
+    <div class="card-header">
+        <h3 class="card-title">
+            <span class="card-header-icon"><i class="tio-money"></i></span>
+            <span class="p-md-1">{{translate('price_range')}}</span>
+        </h3>
+    </div>
+
+    <div class="col-md-6 col-lg-4 col-xl-3 my-5 ml-2">
+        <button type="button" id="add-price-field" class="btn btn--primary">   {{ translate('add_new_price') }}</button>
+    </div>
+    <div id="multi-price-box" class="ml-5">
+    </div>
+    <input type="hidden" name="product_multi_price" id="product_multi_price" />
+</div>
+@else
+            <div id="price_range_box" class="card mt-3" hidden>
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="card-header-icon"><i class="tio-money"></i></span>
+                        <span class="p-md-1">{{translate('price_range')}}</span>
+                    </h3>
+                </div>
+
+                <div class="col-md-6 col-lg-4 col-xl-3 my-5 ml-2">
+                    <button type="button" id="add-price-field" class="btn btn--primary">   {{ translate('add_new_price') }}</button>
+                </div>
+                <div id="multi-price-box" class="ml-5">
+                </div>
+                <input type="hidden" name="product_multi_price" id="product_multi_price" />
+            </div>
+@endif
+
+
 
             <div class="card mt-3 rest-part">
                 <div class="card-header">
@@ -1245,4 +1293,208 @@
         updateProductQuantity();
 
     </script>
+
+
+
+<script>
+    $("#price_type").on('change', function(){
+      var selectedValue = $(this).val();
+      var multiple_price = 'multiple_price';
+
+      if (selectedValue == multiple_price) {
+        $('#price_range_box').removeAttr('hidden');
+      } else {
+        $('#price_range_box').attr('hidden', true);
+      }
+    });
+  </script>
+
+<script>
+    $(document).ready(function() {
+        // Show the multi-price box on page load or based on some condition
+        $("#multi-price-box").show();
+
+        // Function to create a new price field
+        function createNewField(startMin, startPoint = '', endPoint = '', price = '', endless = false) {
+            return `
+                <div class="price-field row">
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="form-group">
+                            <label class="title-color">Start Point:</label>
+                            <input type="number" oninput="this.value = Math.floor(this.value)" class="start-point form-control" min="${startMin}" value="${startPoint}" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="form-group">
+                            <label class="title-color">End Point:</label>
+                            <input type="number" oninput="this.value = Math.floor(this.value)" class="end-point form-control" value="${endPoint}" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4 col-xl-4">
+                        <div class="form-group">
+                            <label class="title-color">Price:</label>
+                            <input type="number" class="price form-control" value="${price}" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4 col-xl-1">
+                        <div class="form-group">
+                            <label class="endless-label mt-6">Endless:</label>
+                            <input type="checkbox" class="endless" ${endless ? 'checked' : ''} />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4 col-xl-1">
+                        <div class="form-group">
+                            <button type="button" class="btn btn-danger delete-row mt-4">Delete</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+
+        function fetchData() {
+            $.ajax({
+                url: "{{route('admin.products.get-price-range',['id'=>$product->id])}}",
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    $("#multi-price-box").empty();
+                    if (data.length > 0) {
+
+                        data.forEach(function(item, index) {
+                            var startMin = index > 0 ? parseFloat(data[index - 1].end_point) + 1 : 0;
+                            $("#multi-price-box").append(createNewField(startMin, item.start_point, item.end_point, item.price, item.endless));
+                        });
+                        checkLastRow();
+                        updateMinMaxValues();
+                        updateEndlessVisibility();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching data: ", status, error);
+                }
+            });
+        }
+
+        // Function to update min/max for all start and end points
+        function updateMinMaxValues() {
+            $(".price-field").each(function(index) {
+                var startPoint = $(this).find(".start-point");
+                var endPoint = $(this).find(".end-point");
+
+                // Previous row's end point (or 0 for the first row)
+                var prevEndPoint = index > 0 ? parseFloat($(".price-field").eq(index - 1).find(".end-point").val()) : 0;
+
+                // Current row's end point
+                var currentEndPoint = parseFloat(endPoint.val());
+
+                // Next row's start point, if exists
+                var nextStartPoint = index < $(".price-field").length - 1 ? parseFloat($(".price-field").eq(index + 1).find(".start-point").val()) : null;
+
+                // Set min and max for start point
+                startPoint.attr("min", prevEndPoint + 1);
+                if (currentEndPoint && !isNaN(currentEndPoint)) {
+                    startPoint.attr("max", currentEndPoint - 1);
+                }
+
+                // Set min and max for end point
+                endPoint.attr("min", parseFloat(startPoint.val()) + 1);
+                if (nextStartPoint && !isNaN(nextStartPoint)) {
+                    endPoint.attr("max", nextStartPoint - 1);
+                }
+            });
+        }
+
+        // Function to update the visibility of endless checkboxes
+        function updateEndlessVisibility() {
+            $(".price-field").each(function(index) {
+                // Hide endless checkbox for all rows except the last one
+                if (index !== $(".price-field").length - 1) {
+                    $(this).find(".endless").hide();
+                    $(this).find(".endless-label").hide();
+                } else {
+                    $(this).find(".endless").show();
+                    $(this).find(".endless-label").show();
+                }
+            });
+        }
+
+        // Function to disable adding new fields if the last row has endless checked
+        function checkLastRow() {
+            var lastField = $(".price-field:last");
+            var endlessChecked = lastField.find(".endless").is(":checked");
+
+            if (endlessChecked) {
+                $("#add-price-field").prop("disabled", true);
+                lastField.find(".end-point").val("").prop("disabled", true);
+            } else {
+                $("#add-price-field").prop("disabled", false);
+                lastField.find(".end-point").prop("disabled", false);
+            }
+        }
+
+
+        function updateProductMultiPrice() {
+            var priceData = [];
+
+            $(".price-field").each(function() {
+                var startPoint = $(this).find(".start-point").val();
+                var endPoint = $(this).find(".end-point").val();
+                var price = $(this).find(".price").val();
+                var endless = $(this).find(".endless").is(":checked");
+
+                priceData.push({
+                    start_point: startPoint,
+                    end_point: endPoint,
+                    price: price,
+                    endless: endless
+                });
+            });
+
+
+            $("#product_multi_price").val(JSON.stringify(priceData));
+        }
+
+
+        $("#add-price-field").click(function() {
+            var lastEndPoint = parseFloat($(".price-field:last .end-point").val());
+            if (!isNaN(lastEndPoint)) {
+                $("#multi-price-box").append(createNewField(lastEndPoint + 1));
+            } else {
+                $("#multi-price-box").append(createNewField(0));
+            }
+            updateMinMaxValues();
+            updateEndlessVisibility();
+            checkLastRow();
+            updateProductMultiPrice();
+        });
+
+        // On endless checkbox change
+        $(document).on("change", ".endless", function() {
+            checkLastRow();
+            updateProductMultiPrice();
+        });
+
+        // On start-point, end-point, or other fields change, update the JSON data
+        $(document).on("change", ".start-point, .end-point, .price", function() {
+            updateMinMaxValues();
+            updateProductMultiPrice();
+        });
+
+
+        $(document).on("click", ".delete-row", function() {
+            $(this).closest(".price-field").remove();
+            updateMinMaxValues();
+            updateEndlessVisibility();
+            checkLastRow();
+            updateProductMultiPrice();
+        });
+
+        fetchData();
+    });
+</script>
+
 @endpush
